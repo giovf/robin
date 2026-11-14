@@ -27,7 +27,10 @@ high-signal — it's part of every prompt, so verbosity costs tokens.
 - `npm run typecheck` — `next typegen && tsc --noEmit`
 - `npm run lint` — ESLint
 - `npm run format` / `npm run format:check` — Prettier
-- No test runner yet — add one with the first task that needs tests.
+- `npm test` / `npm run test:watch` — Vitest; needs local Postgres, uses a
+  throwaway `robin_test` database (never the dev database)
+- `npm run db:generate` / `db:generate:customer` — generate migrations for the
+  control-plane / customer schema; `npm run db:migrate` applies control-plane
 - Local Postgres starts with the container
   (`postgres://robin:robin@localhost:5432/robin`); if it is down, run
   `bash .devcontainer/post-start.sh`.

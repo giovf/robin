@@ -24,6 +24,14 @@ ownership are in the data model from day one, even though v1 is single-user.
 - `src/db/control-plane/` — control-plane Drizzle client (`connection.ts`,
   `getControlPlaneDb()`) and schema
 - `src/db/customer/schema/` — schema applied to every customer database
+- `src/db/customer/pools.ts` — per-customer connection pools; restricted by
+  ESLint to the resolver and provisioning
+- `src/lib/customer-connection.ts` — the customer-connection resolver
+  (`getCustomerConnection(userId, customerId)`)
+- `src/lib/customer-provisioning.ts` — create / migrate / archive / drop
+  customer databases (named `customer_<uuid>`)
+- `src/test/` — Vitest global setup and fixtures; tests are colocated
+  `*.test.ts` and run against a throwaway `robin_test` control plane
 - `drizzle.config.ts` / `drizzle.customer.config.ts` — the two migration
   tracks; generated SQL lands in `drizzle/control-plane` and `drizzle/customer`
 - `public/` — static assets

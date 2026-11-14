@@ -178,7 +178,7 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -186,9 +186,10 @@
             "description": "Define the solutions table schema with uuid primary key, name, description, currentPhase enum (discovery, requirements, design, implementation, etc.), and status enum (active, going_ahead, completed, archived).",
             "dependencies": [],
             "details": "Create `src/db/customer/schema/solutions.ts` with the solutions table definition. Include uuid('id').defaultRandom().primaryKey(), text('name').notNull(), optional text('description'), currentPhase column with enum or text with default 'discovery', status column with enum ['active', 'going_ahead', 'completed', 'archived'] defaulting to 'active', and timestamp('created_at').defaultNow().notNull(). Export the solutions table and inferred types (Solution, NewSolution) using Drizzle's $inferSelect and $inferInsert. Consider using pgEnum for phase and status to ensure type safety at the database level. Import necessary Drizzle functions from drizzle-orm/pg-core.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation succeeds with `npm run typecheck`. Confirm enum values match specification and default values are correctly set.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:39.950Z"
           },
           {
             "id": 2,
@@ -198,9 +199,10 @@
               1
             ],
             "details": "Create `src/db/customer/schema/calls.ts` with the calls table definition. Include uuid('id').defaultRandom().primaryKey(), solutionId foreign key referencing solutions.id with notNull(), text('meeting_url').notNull() for the meeting link, text('bot_id') for Recall.ai bot identifier, botStatus enum or text column ['creating', 'joining', 'in_call', 'leaving', 'left', 'error'], timestamp('started_at'), timestamp('ended_at'), boolean('consent_acknowledged').default(false).notNull() to track user consent before recording, and timestamp('created_at').defaultNow().notNull(). Define Drizzle relations for calls to solutions. Export types CallRecord, NewCallRecord.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation. Confirm foreign key reference to solutions compiles correctly and bot status enum values are complete.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:41.662Z"
           },
           {
             "id": 3,
@@ -210,9 +212,10 @@
               2
             ],
             "details": "Create `src/db/customer/schema/transcript_segments.ts` with: uuid primary key, callId foreign key referencing calls.id with notNull(), text('speaker').notNull() for speaker identification, text('text').notNull() for transcript content, integer or numeric columns for start_time and end_time (in milliseconds or seconds from call start), and createdAt timestamp. Create `src/db/customer/schema/suggestions.ts` with: uuid primary key, callId foreign key referencing calls.id, text('text').notNull() for the suggested question, text('rationale') explaining why this question is relevant, state enum ['shown', 'asked', 'dismissed'] with default 'shown', and createdAt timestamp. Define relations linking both tables to calls.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation. Test that transcript segment timestamps can store millisecond precision. Confirm suggestion state enum includes all required values.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:43.257Z"
           },
           {
             "id": 4,
@@ -222,9 +225,10 @@
               1
             ],
             "details": "Create `src/db/customer/schema/documents.ts` with: uuid primary key, solutionId foreign key referencing solutions.id with notNull(), text('template_id') for template reference (e.g., 'discovery-summary', 'requirements'), text('phase') for lifecycle phase association, text('title').notNull(), and createdAt/updatedAt timestamps. Create `src/db/customer/schema/document_versions.ts` with: uuid primary key, documentId foreign key referencing documents.id, integer('version').notNull() for version number, text('content').notNull() for the full document content, jsonb('citations') to store array of citation objects [{sourceId, text, location}], text('created_by') for user reference, and createdAt timestamp. Define relations for documents to solutions and document_versions to documents. Export types for both tables.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation. Test that JSONB citations column can store citation arrays. Verify version numbering allows sequential increments.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:44.871Z"
           },
           {
             "id": 5,
@@ -234,9 +238,10 @@
               1
             ],
             "details": "Create `src/db/customer/schema/diagrams.ts` with the diagrams table definition. Include uuid('id').defaultRandom().primaryKey(), solutionId foreign key referencing solutions.id with notNull(), text('title').notNull() for diagram name, text('source_code').notNull() for the diagram-as-code content (Mermaid, PlantUML, etc.), text('format').notNull().default('mermaid') specifying the diagram language, text('diagram_type') for categorization (e.g., 'architecture', 'sequence', 'flowchart', 'er'), and createdAt/updatedAt timestamps. Define relation to solutions table. Export Diagram and NewDiagram types.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation. Confirm source_code column can store large diagram definitions. Test that format default value is correctly applied.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:46.470Z"
           },
           {
             "id": 6,
@@ -244,9 +249,10 @@
             "description": "Define source_items table for tracking ingested content sources, and chunks table with pgvector embedding column for semantic search. This is critical for RAG functionality.",
             "dependencies": [],
             "details": "Create `src/db/customer/schema/source_items.ts` with: uuid primary key, text('provider').notNull() enum-like ['upload', 'gmail', 'drive', 'confluence', 'jira', 'call_transcript'], text('external_id') for provider's identifier, text('title').notNull(), text('url') for source link, text('content_hash') for deduplication, timestamp('synced_at') for last sync time, and createdAt timestamp. Create `src/db/customer/schema/chunks.ts` using pgvector: uuid primary key, sourceItemId foreign key referencing source_items.id (nullable for transcript chunks), transcriptSegmentId foreign key (nullable, for transcript-based chunks), text('text').notNull() for chunk content, vector('embedding', { dimensions: 1536 }) for the embedding vector (1536 = OpenAI ada-002 default, configurable). Import vector from 'drizzle-orm/pg-core' for pgvector support. Define relations to source_items. Note: Drizzle pgvector support may require drizzle-orm/pg-core or a custom type definition.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation with vector type. Test that embedding column accepts 1536-dimension float arrays. Verify source_items provider values cover all integration types.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:48.039Z"
           },
           {
             "id": 7,
@@ -254,9 +260,10 @@
             "description": "Define tables for storing per-customer AI agent configuration (model settings, prompts) and agent memory (conversation history, context for sessions).",
             "dependencies": [],
             "details": "Create `src/db/customer/schema/agent_config.ts` with: uuid primary key (single row per customer, or use customerId as PK), text('system_prompt_override') for custom system prompt additions, real('temperature').default(0.7) for model temperature, text('model_override') for non-default model selection, jsonb('settings') for additional configuration, and updatedAt timestamp. Create `src/db/customer/schema/agent_memory.ts` with: uuid primary key, text('session_id') for grouping conversation turns, text('role') enum ['user', 'assistant', 'system'], text('content').notNull() for message content, jsonb('metadata') for additional context (retrieved chunks, etc.), integer('sequence') for ordering within session, and createdAt timestamp. Consider whether agent_config should be singleton (one row) or support multiple configurations.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation. Test JSONB columns can store complex configuration objects. Verify temperature column accepts decimal values between 0 and 1.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:49.608Z"
           },
           {
             "id": 8,
@@ -272,14 +279,16 @@
               7
             ],
             "details": "Create `src/db/customer/schema/index.ts` that re-exports all tables, relations, enums, and types from solutions, calls, transcript_segments, suggestions, documents, document_versions, diagrams, source_items, chunks, agent_config, and agent_memory. Export a combined customerSchema object for use with Drizzle client. Add a README comment or separate doc noting pgvector extension must be enabled on each customer database: `CREATE EXTENSION IF NOT EXISTS vector;`. Consider adding an IVFFlat index definition for chunks.embedding for efficient similarity search: `CREATE INDEX chunks_embedding_idx ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);`. Ensure no circular dependency issues between relation definitions. Verify drizzle.customer.config.ts points to this index file.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `npm run typecheck` to verify all exports compile correctly. Verify all tables and relations can be imported from the index file. Run `npm run db:generate:customer` to verify Drizzle Kit can generate a valid migration. Test applying migration to a test customer database with pgvector extension enabled.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:34:51.322Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 8,
-        "expansionPrompt": "Break down into: 1) solutions table with phase and status enums, 2) calls table with bot state tracking, 3) transcript_segments with timestamps, 4) suggestions with state enum, 5) documents and document_versions with relations, 6) diagrams table, 7) source_items and chunks with pgvector embedding, 8) agent_config and agent_memory tables. Pay special attention to pgvector setup and ensure vector dimensions match embedding provider."
+        "expansionPrompt": "Break down into: 1) solutions table with phase and status enums, 2) calls table with bot state tracking, 3) transcript_segments with timestamps, 4) suggestions with state enum, 5) documents and document_versions with relations, 6) diagrams table, 7) source_items and chunks with pgvector embedding, 8) agent_config and agent_memory tables. Pay special attention to pgvector setup and ensure vector dimensions match embedding provider.",
+        "updatedAt": "2026-11-14T16:34:51.322Z"
       },
       {
         "id": "4",
@@ -292,7 +301,7 @@
           "2",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -300,9 +309,10 @@
             "description": "Create the admin database connection utility that can connect to the postgres database with privileges to create new databases.",
             "dependencies": [],
             "details": "Create `src/lib/db/admin-connection.ts` with a function `getAdminPool()` that returns a Pool connected to the postgres system database using DATABASE_URL. This connection needs CREATEDB privileges. Include proper error handling for connection failures, a health check function to verify admin connectivity, and ensure the pool is properly cleaned up after database creation operations. The admin connection should never be used for normal application queries - only for DDL operations like CREATE DATABASE.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that getAdminPool() successfully connects to postgres database. Verify it can run `SELECT 1` query. Test error handling when DATABASE_URL is invalid or postgres is unreachable. Ensure pool.end() properly closes connections.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:25.565Z"
           },
           {
             "id": 2,
@@ -312,9 +322,10 @@
               1
             ],
             "details": "Create `src/lib/db/customer-connection.ts` with: (1) `buildCustomerDbName(customerId: string): string` - converts UUID to database name using pattern `customer_{uuid_with_underscores}` (e.g., `customer_abc123_def456`), (2) `buildCustomerConnectionString(dbName: string): string` - constructs a valid postgres connection URL using the same host/port/credentials from DATABASE_URL but targeting the specified database name, (3) `getCustomerPool(customerId: string): Pool` - returns a connection pool to a customer's database. Include validation to ensure customerId is a valid UUID format before transformation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that UUIDs are correctly transformed (hyphens to underscores, proper prefix). Verify connection strings are properly formatted. Test with edge cases: very long UUIDs, UUIDs with special characters that might break postgres identifiers. Verify resulting database names are valid postgres identifiers.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:27.156Z"
           },
           {
             "id": 3,
@@ -324,9 +335,10 @@
               2
             ],
             "details": "Create `src/lib/db/customer-migrations.ts` with: (1) A migration file scanner that reads `src/db/customer/migrations/*.sql` files and parses their version numbers (use naming convention `0001_description.sql`), (2) `runCustomerMigrations(pool: Pool): Promise<void>` that applies all pending migrations in order, (3) Transaction handling - each migration runs in its own transaction, if any fails the transaction rolls back and the function throws with details about which migration failed, (4) Proper SQL file execution that handles multi-statement migrations. Use drizzle-kit pattern for migration files but implement a lightweight runner since we need to apply the same schema to many databases.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create test migrations and verify they're discovered in correct order. Test that migrations run in transactions - a failing migration doesn't leave partial changes. Test with empty migrations directory. Test migration ordering with gaps in version numbers.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:28.747Z"
           },
           {
             "id": 4,
@@ -336,9 +348,10 @@
               3
             ],
             "details": "Extend the migration runner to: (1) Create a `_migrations` table in each customer database on first run (id, version, name, applied_at), (2) Query this table before running migrations to determine which are pending, (3) Record each successful migration in the table with timestamp, (4) Support `getMigrationStatus(pool: Pool): Promise<MigrationStatus[]>` to check current state. The `_migrations` table should be created as part of the migration runner initialization, not as a numbered migration itself. Include locking mechanism to prevent concurrent migration runs on the same database.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that _migrations table is created on first run. Verify re-running migrations skips already-applied ones. Test getMigrationStatus returns correct applied/pending counts. Test concurrent migration attempts are properly serialized or rejected.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:30.387Z"
           },
           {
             "id": 5,
@@ -351,9 +364,10 @@
               4
             ],
             "details": "Create `src/lib/customer-provisioning.ts` with `provisionCustomerDatabase(customerId: string, customerName: string): Promise<string>` that: (1) Validates the customerId format, (2) Uses admin pool to CREATE DATABASE, (3) Connects to new database and runs all migrations, (4) Handles partial failures - if migration fails after CREATE DATABASE, the function should clean up by dropping the partially-created database, (5) Returns the database name on success, (6) Includes idempotency check - if database already exists, verify it's properly migrated rather than failing. Add logging throughout for debugging provisioning issues. The function should be atomic from the caller's perspective - either fully provisioned or rolled back.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test full provisioning flow end-to-end. Verify idempotency - calling twice with same customerId succeeds. Test failure recovery - simulate migration failure and verify database is cleaned up. Test with invalid customerId formats. Verify database exists and has all tables after successful provisioning.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:32.013Z"
           },
           {
             "id": 6,
@@ -363,14 +377,16 @@
               5
             ],
             "details": "Add to `src/lib/customer-provisioning.ts`: (1) `deprovisionCustomerDatabase(customerId: string, options: { mode: 'archive' | 'drop' }): Promise<void>` - archive mode renames database to `customer_{id}_archived_{timestamp}`, drop mode permanently removes it, (2) Require explicit confirmation parameter for drop mode to prevent accidental deletion, (3) Terminate all active connections to the database before archive/drop (using pg_terminate_backend), (4) Add `listArchivedDatabases(): Promise<string[]>` to find archived databases, (5) Add `restoreArchivedDatabase(archivedName: string, customerId: string): Promise<void>` to restore an archived database. Include comprehensive logging and emit events for audit trail.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test archive mode creates correctly named archived database. Test drop mode requires confirmation parameter. Verify active connections are terminated before operations. Test restore functionality brings back archived database. Test that archived databases are discoverable via listArchivedDatabases.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:33.689Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Admin pool connection for CREATE DATABASE, 2) Database naming convention and connection string builder, 3) Migration runner that applies customer schema, 4) Migration version tracking within customer database, 5) Provisioning function that orchestrates creation and migration, 6) Deprovision/archive function with safeguards. Include error handling for partial failures."
+        "expansionPrompt": "Break down into: 1) Admin pool connection for CREATE DATABASE, 2) Database naming convention and connection string builder, 3) Migration runner that applies customer schema, 4) Migration version tracking within customer database, 5) Provisioning function that orchestrates creation and migration, 6) Deprovision/archive function with safeguards. Include error handling for partial failures.",
+        "updatedAt": "2026-11-14T16:36:33.689Z"
       },
       {
         "id": "5",
@@ -383,7 +399,7 @@
           "2",
           "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -391,9 +407,10 @@
             "description": "Define the CustomerDb type representing a typed Drizzle connection to a customer database, and create custom error classes for access control and status failures.",
             "dependencies": [],
             "details": "Create `src/lib/customer-connection/types.ts` with:\n1. `CustomerDb` type - a typed Drizzle PostgreSQL connection scoped to the customer schema\n2. `CustomerConnectionOptions` interface for optional configuration (timeouts, logging)\n\nCreate `src/lib/customer-connection/errors.ts` with:\n1. `CustomerAccessDeniedError` - thrown when user lacks membership to customer's org\n2. `CustomerNotFoundError` - thrown when customer ID doesn't exist\n3. `CustomerArchivedError` - thrown when customer status is 'archived'\n\nEach error should extend a base `CustomerConnectionError` class with `customerId` property for logging. Export all types and errors from `src/lib/customer-connection/index.ts` barrel file.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests verifying error classes have correct names, extend Error properly, contain customerId, and can be caught specifically",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:35.490Z"
           },
           {
             "id": 2,
@@ -403,9 +420,10 @@
               1
             ],
             "details": "Create `src/lib/customer-connection/verify-access.ts` with a `verifyCustomerAccess` function that:\n1. Queries control-plane database joining `customers` → `memberships` on `organizationId`\n2. Filters by: `customers.id = customerId`, `memberships.userId = userId`, `customers.status = 'active'`\n3. Returns customer record with `databaseName` if access granted\n4. Throws `CustomerNotFoundError` if customer doesn't exist\n5. Throws `CustomerArchivedError` if customer.status is 'archived'\n6. Throws `CustomerAccessDeniedError` if user lacks membership\n\nThe function must be fast (single indexed query) and log access attempts for audit. Uses Drizzle's `eq()`, `and()` for type-safe query building.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test valid access returns customer, test non-member gets AccessDenied, test archived customer gets ArchivedError, test missing customer gets NotFoundError",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:37.295Z"
           },
           {
             "id": 3,
@@ -415,9 +433,10 @@
               1
             ],
             "details": "Create `src/lib/customer-connection/pool-manager.ts` with:\n1. `CustomerPoolManager` class (singleton pattern) storing `Map<databaseName, DrizzlePool>`\n2. `getOrCreatePool(databaseName: string): DrizzlePool` - returns existing pool or creates new one\n3. Pool configuration: max 10 connections per customer (configurable), connection timeout 30s, idle timeout 10min\n4. Connection string builder using `postgres://robin:${CUSTOMER_DB_PASSWORD}@localhost:5432/${databaseName}` pattern\n5. Wrap pool creation with Drizzle's `drizzle(pool, { schema: customerSchema })`\n\nUse `node-postgres` Pool (pg) with Drizzle. Pool params come from env vars with sensible defaults. The manager is module-level singleton, not class instance.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test same databaseName returns same pool instance, test different databases get different pools, test pool configuration matches expected values",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:38.920Z"
           },
           {
             "id": 4,
@@ -427,9 +446,10 @@
               3
             ],
             "details": "Extend `pool-manager.ts` with:\n1. `cleanupIdlePools()` - runs on interval (5min), closes pools with no active queries for >30min\n2. `lastActivity` timestamp tracked per pool on each `getOrCreatePool` call\n3. `closePool(databaseName: string)` - gracefully drain and close a specific pool\n4. `closeAllPools()` - for graceful shutdown, close all pools awaiting drain\n5. `getPoolStats()` - returns map of pool sizes, active connections, idle time for monitoring\n6. Global pool limit (e.g., 50 total pools) - throws if exceeded with appropriate error\n7. `initializeCleanupInterval()` / `stopCleanupInterval()` for lifecycle control\n\nRegister shutdown handler using `process.on('beforeExit')` or Next.js instrumentation hook.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test idle pool gets cleaned up after timeout, test pool limit enforcement, test shutdown closes all pools, test stats reporting accuracy",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:40.511Z"
           },
           {
             "id": 5,
@@ -440,14 +460,16 @@
               4
             ],
             "details": "Create `src/lib/customer-connection/resolver.ts` with:\n1. `getCustomerConnection(userId: string, customerId: string): Promise<CustomerDb>` as the main export\n2. Calls `verifyCustomerAccess()` first - any failure bubbles up as the appropriate error\n3. On success, calls `poolManager.getOrCreatePool(customer.databaseName)`\n4. Returns typed `CustomerDb` connection with customer schema\n5. Optional audit logging of successful connections (user, customer, timestamp)\n\nCreate `src/lib/customer-connection/index.ts` barrel:\n- Export ONLY: `getCustomerConnection`, error types, `CustomerDb` type\n- Do NOT export pool manager or verify functions directly\n- Add JSDoc comment: 'This is the ONLY way to obtain a customer database connection'\n\nAdd eslint rule or comment markers to prevent direct pool/connection imports elsewhere.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration test: valid user+customer returns working connection that can query customer schema. Test cross-customer isolation: connection for customer A cannot see customer B's data. Test all error paths propagate correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:36:42.166Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Ownership verification query joining customers→memberships, 2) Connection pool manager with per-customer caching, 3) Pool lifecycle management (idle cleanup, connection limits), 4) Custom error types (AccessDenied, NotFound, Archived), 5) TypeScript types for CustomerDb. Ensure the resolver is the ONLY way to get customer connections."
+        "expansionPrompt": "Break down into: 1) Ownership verification query joining customers→memberships, 2) Connection pool manager with per-customer caching, 3) Pool lifecycle management (idle cleanup, connection limits), 4) Custom error types (AccessDenied, NotFound, Archived), 5) TypeScript types for CustomerDb. Ensure the resolver is the ONLY way to get customer connections.",
+        "updatedAt": "2026-11-14T16:36:42.166Z"
       },
       {
         "id": "6",
@@ -2325,13 +2347,30 @@
         "complexity": 5,
         "recommendedSubtasks": 5,
         "expansionPrompt": "Break down into: 1) Test infrastructure with Vitest and test users/customers, 2) Direct resolver access denial tests, 3) Query isolation tests via resolver, 4) API endpoint authorization tests, 5) Agent retrieval scope tests. Intentionally try to break isolation to verify protection."
+      },
+      {
+        "id": "31",
+        "title": "Add Vitest test runner with integration test infrastructure",
+        "description": "Configure Vitest as the project's test runner with @/ path alias support, .env loading, npm scripts (test/test:watch), colocated *.test.ts files, and integration test infrastructure that creates/drops throwaway PostgreSQL databases against the dev-container server.",
+        "details": "## Installation\n\nInstall Vitest and required dependencies as dev dependencies:\n```bash\nnpm install -D vitest vite-tsconfig-paths\n```\n\nNote: `vitest` is already in package.json (^5.1.0). Verify `@types/node` is up-to-date (currently ^26.6.6, which is sufficient).\n\n## Configuration\n\nCreate `vitest.config.ts` in the project root:\n```typescript\nimport { defineConfig } from 'vitest/config';\nimport tsconfigPaths from 'vite-tsconfig-paths';\n\nexport default defineConfig({\n  plugins: [tsconfigPaths()],\n  test: {\n    // Load .env for DATABASE_URL and other env vars\n    setupFiles: ['./src/test/setup.ts'],\n    // Colocated tests pattern\n    include: ['src/**/*.test.ts'],\n    // Integration tests may need longer timeouts\n    testTimeout: 30000,\n    // Run tests in sequence by default for database safety\n    pool: 'forks',\n    poolOptions: {\n      forks: {\n        singleFork: true,\n      },\n    },\n  },\n});\n```\n\n## Test Setup File\n\nCreate `src/test/setup.ts`:\n```typescript\nimport { existsSync } from 'node:fs';\n\n// Load .env before any tests run\nif (existsSync('.env')) {\n  process.loadEnvFile('.env');\n}\n```\n\n## Integration Test Utilities\n\nCreate `src/test/db.ts` for throwaway database management:\n```typescript\nimport { sql } from 'drizzle-orm';\nimport { drizzle } from 'drizzle-orm/node-postgres';\nimport { Pool } from 'pg';\nimport { randomBytes } from 'node:crypto';\n\nimport { requireEnv } from '@/db/env';\n\n/**\n * Creates a throwaway test database with a random suffix.\n * Returns connection pool and cleanup function.\n */\nexport async function createTestDatabase(): Promise<{\n  pool: Pool;\n  db: ReturnType<typeof drizzle>;\n  databaseName: string;\n  cleanup: () => Promise<void>;\n}> {\n  const baseUrl = requireEnv('DATABASE_URL');\n  const suffix = randomBytes(4).toString('hex');\n  const databaseName = `robin_test_${suffix}`;\n\n  // Connect to the control-plane database to create the test database\n  const adminPool = new Pool({ connectionString: baseUrl });\n  await adminPool.query(`CREATE DATABASE ${databaseName}`);\n  await adminPool.end();\n\n  // Connect to the new test database\n  const testUrl = baseUrl.replace(/\\/robin$/, `/${databaseName}`);\n  const pool = new Pool({ connectionString: testUrl });\n  \n  // Enable pgvector extension\n  await pool.query('CREATE EXTENSION IF NOT EXISTS vector');\n\n  const db = drizzle(pool);\n\n  const cleanup = async (): Promise<void> => {\n    await pool.end();\n    const cleanupPool = new Pool({ connectionString: baseUrl });\n    // Force disconnect any remaining connections\n    await cleanupPool.query(`\n      SELECT pg_terminate_backend(pid) \n      FROM pg_stat_activity \n      WHERE datname = '${databaseName}' AND pid <> pg_backend_pid()\n    `);\n    await cleanupPool.query(`DROP DATABASE IF EXISTS ${databaseName}`);\n    await cleanupPool.end();\n  };\n\n  return { pool, db, databaseName, cleanup };\n}\n\n/**\n * Creates a throwaway customer database and applies customer schema migrations.\n * For testing customer isolation and customer-specific features.\n */\nexport async function createTestCustomerDatabase(): Promise<{\n  pool: Pool;\n  db: ReturnType<typeof drizzle>;\n  databaseName: string;\n  cleanup: () => Promise<void>;\n}> {\n  const result = await createTestDatabase();\n  \n  // Apply customer schema migrations here when available\n  // TODO: Import and apply customer schema once Task 3 is complete\n  \n  return result;\n}\n```\n\n## NPM Scripts\n\nAdd to `package.json`:\n```json\n{\n  \"scripts\": {\n    \"test\": \"vitest run\",\n    \"test:watch\": \"vitest\"\n  }\n}\n```\n\n## Example Test File\n\nCreate `src/db/control-plane/connection.test.ts` as a validation test:\n```typescript\nimport { describe, it, expect, afterAll } from 'vitest';\nimport { sql } from 'drizzle-orm';\n\nimport { createTestDatabase } from '@/test/db';\n\ndescribe('Database Connection', () => {\n  let cleanup: () => Promise<void>;\n\n  afterAll(async () => {\n    if (cleanup) await cleanup();\n  });\n\n  it('creates and drops a throwaway test database', async () => {\n    const result = await createTestDatabase();\n    cleanup = result.cleanup;\n\n    // Verify we can query the test database\n    const queryResult = await result.db.execute(sql`SELECT 1 as value`);\n    expect(queryResult.rows[0]).toEqual({ value: 1 });\n\n    // Verify pgvector is available\n    const extResult = await result.db.execute(\n      sql`SELECT extname FROM pg_extension WHERE extname = 'vector'`\n    );\n    expect(extResult.rows).toHaveLength(1);\n  });\n});\n```\n\n## File Structure\n\n```\nrobin/\n├── vitest.config.ts           # Vitest configuration\n├── src/\n│   ├── test/\n│   │   ├── setup.ts           # Test setup (env loading)\n│   │   └── db.ts              # Database test utilities\n│   └── db/\n│       └── control-plane/\n│           └── connection.test.ts  # Example colocated test\n```\n\n## Key Considerations\n\n1. **Colocated tests**: Tests live next to the code they test as `*.test.ts` files, per project convention\n2. **Single fork execution**: Database tests run sequentially to avoid connection pool conflicts\n3. **Throwaway databases**: Each test suite can create its own database, completely isolated\n4. **Dev container Postgres**: Tests use the same local server defined in `.devcontainer/post-start.sh`\n5. **Path aliases**: `vite-tsconfig-paths` reads `tsconfig.json` paths for `@/` alias support\n6. **Environment loading**: `.env` is loaded via `process.loadEnvFile()` (Node.js built-in) in setup file",
+        "testStrategy": "1. **Installation verification**:\n   - Run `npm install` and verify no errors\n   - Confirm `vitest` and `vite-tsconfig-paths` are in devDependencies\n\n2. **Configuration validation**:\n   - Run `npm run test` and verify Vitest starts successfully\n   - Run `npm run test:watch` and verify watch mode works\n\n3. **Path alias test**:\n   - Create a test file that imports using `@/db/env` \n   - Verify imports resolve correctly when running tests\n\n4. **Environment loading test**:\n   - Verify tests can access `DATABASE_URL` from `.env`\n   - Test should fail with clear error if `.env` is missing\n\n5. **Throwaway database test**:\n   - Run the example `connection.test.ts`\n   - Verify a `robin_test_*` database is created during test\n   - Query `SELECT datname FROM pg_database WHERE datname LIKE 'robin_test_%'` before and after to confirm cleanup\n   - Run tests multiple times to ensure no database leaks\n\n6. **Integration with existing tooling**:\n   - Run `npm run typecheck` to ensure test files pass TypeScript checks\n   - Run `npm run lint` to verify test files pass ESLint\n\n7. **Isolation verification**:\n   - Run two test suites concurrently (when safe) to verify they use separate databases\n   - Confirm each test database has pgvector extension enabled",
+        "status": "done",
+        "dependencies": [
+          "2"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "complexity": 5,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the Vitest test runner setup into subtasks: 1) Install dependencies and verify existing vitest package, create vitest.config.ts with vite-tsconfig-paths plugin for @/ alias support; 2) Create src/test/setup.ts for .env loading using process.loadEnvFile; 3) Create src/test/db.ts with createTestDatabase() and createTestCustomerDatabase() utilities for throwaway PostgreSQL database management including pgvector extension setup and cleanup functions; 4) Add npm scripts (test/test:watch) to package.json and create src/db/control-plane/connection.test.ts as validation test to verify the infrastructure works correctly",
+        "updatedAt": "2026-11-14T16:36:49.029Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T16:18:10.255Z",
-      "taskCount": 30,
-      "completedCount": 2,
+      "lastModified": "2026-11-14T16:36:49.029Z",
+      "taskCount": 31,
+      "completedCount": 6,
       "tags": [
         "master"
       ]

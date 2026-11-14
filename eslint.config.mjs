@@ -8,6 +8,31 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Turn off ESLint rules that conflict with Prettier (formatting is Prettier's job).
   prettier,
+  // Customer isolation: raw customer-database pools carry no ownership check.
+  // Only the resolver and provisioning may touch them.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/lib/customer-connection.ts",
+      "src/lib/customer-provisioning.ts",
+      "src/db/customer/pools.ts",
+      "src/**/*.test.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "(^@/db/customer/pools$)|(/pools$)",
+              message:
+                "Get customer database connections through getCustomerConnection (@/lib/customer-connection).",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

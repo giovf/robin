@@ -343,6 +343,8 @@ Customer database (one per customer):
    rules and any data-residency needs.
 3. **Accounts:** Anthropic and Recall.ai accounts are not yet confirmed.
 4. **Embeddings provider:** which model/service produces embeddings for pgvector?
+   (Until decided, `chunks.embedding` is a 1536-dimension placeholder; changing it is one
+   customer-schema migration plus re-embedding.)
 5. **Login method:** e.g. Google sign-in (the user already connects Google) or
    email + password; and which auth library.
 6. **Production hosting:** where Robin runs and which managed Postgres (must support
@@ -369,3 +371,13 @@ prompted it.
 - 2026-11-14 — Initial PRD approved.
 
 </PRD>
+
+## Changelog
+
+- 2026-11-14 — Foundation implemented (tasks 1–5, 31). Decisions recorded:
+  `chunks.embedding` uses a placeholder size of 1536 with an HNSW cosine index until the
+  embeddings provider is chosen; chunks reference either a source item or a call (transcript);
+  `agent_config` is a single row per customer database; archiving a customer renames its
+  database to `archived_<name>` (content kept), deletion drops it; customer databases are
+  named `customer_<uuid>`; Vitest added as the test runner, running against a throwaway
+  `robin_test` control plane.

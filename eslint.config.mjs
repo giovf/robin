@@ -8,6 +8,19 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Turn off ESLint rules that conflict with Prettier (formatting is Prettier's job).
   prettier,
+  // A leading underscore marks a deliberately unused binding.
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
   // Customer isolation: raw customer-database pools carry no ownership check.
   // Only the resolver and provisioning may touch them.
   {

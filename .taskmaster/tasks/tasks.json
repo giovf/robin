@@ -826,7 +826,7 @@
         "dependencies": [
           "2"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -834,9 +834,10 @@
             "description": "Implement the encryptToken function in src/lib/encryption.ts using AES-256-GCM with unique IV per encryption and proper auth tag generation.",
             "dependencies": [],
             "details": "Create src/lib/encryption.ts with:\n1. Import crypto module (createCipheriv, randomBytes)\n2. Define ALGORITHM constant as 'aes-256-gcm'\n3. Read TOKEN_ENCRYPTION_KEY from env as base64-encoded Buffer (32 bytes for AES-256)\n4. Implement encryptToken(plaintext: string): string that:\n   - Generates a unique 16-byte IV using randomBytes(16)\n   - Creates cipher with createCipheriv(ALGORITHM, KEY, iv)\n   - Encrypts plaintext to base64\n   - Extracts auth tag with cipher.getAuthTag()\n   - Returns formatted string: iv:authTag:ciphertext (all base64)\n5. Add input validation for empty/null plaintext\n6. Add explicit return type annotations",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test encryption produces different output for same input (IV uniqueness), verify output format is iv:authTag:ciphertext, test with various input lengths including empty string handling.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:51:53.889Z"
           },
           {
             "id": 2,
@@ -846,9 +847,10 @@
               1
             ],
             "details": "Add to src/lib/encryption.ts:\n1. Import createDecipheriv from crypto\n2. Implement decryptToken(encrypted: string): string that:\n   - Splits encrypted string by ':' to extract iv, authTag, ciphertext\n   - Validates format has exactly 3 parts\n   - Converts each part from base64 to Buffer\n   - Creates decipher with createDecipheriv(ALGORITHM, KEY, iv)\n   - Sets auth tag with decipher.setAuthTag(authTag) BEFORE decryption\n   - Decrypts ciphertext from base64 to utf8\n   - Returns decrypted plaintext\n3. Handle errors gracefully (invalid format, wrong key, tampered data)\n4. Auth tag validation happens automatically during final() - if tampered, throws error",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify roundtrip (encrypt then decrypt returns original), test decryption fails with wrong key, test decryption fails when ciphertext is tampered, test decryption fails with wrong auth tag.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:51:55.689Z"
           },
           {
             "id": 3,
@@ -856,9 +858,10 @@
             "description": "Add encryptedAccessToken, encryptedRefreshToken, and tokenExpiresAt columns to the integration_connections table in the control-plane schema.",
             "dependencies": [],
             "details": "Update src/lib/db/schema/control-plane.ts (or create if schema file doesn't exist yet for control plane):\n1. Add to integrationConnections pgTable definition:\n   - encryptedAccessToken: text('encrypted_access_token') - stores iv:authTag:ciphertext format\n   - encryptedRefreshToken: text('encrypted_refresh_token').notNull().default('') - optional refresh token\n   - tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }) - for token refresh scheduling\n2. Remove any plaintext token fields if they exist\n3. Add appropriate indexes if needed for token expiry queries\n4. Generate and run Drizzle migration for schema changes",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify migration applies cleanly, confirm columns exist in database with correct types, test inserting encrypted token values.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:51:57.480Z"
           },
           {
             "id": 4,
@@ -870,14 +873,16 @@
               3
             ],
             "details": "Create src/lib/integrations/tokens.ts:\n1. Define OAuthTokens interface: { accessToken: string; refreshToken?: string; expiresAt?: Date }\n2. Implement getIntegrationTokens(connectionId: string): Promise<OAuthTokens> that:\n   - Queries integrationConnections table by id using Drizzle\n   - Throws error if connection not found\n   - Decrypts encryptedAccessToken using decryptToken()\n   - Decrypts encryptedRefreshToken if present\n   - Returns OAuthTokens object with decrypted values and expiresAt\n3. Add saveIntegrationTokens(connectionId: string, tokens: OAuthTokens) helper for storing\n4. Handle edge cases: missing refresh token, expired tokens\n5. Use proper TypeScript types with explicit return types",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test retrieval returns decrypted tokens matching original values, test error handling for non-existent connection ID, test with missing refresh token, verify tokens are never logged or exposed in errors.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:51:59.246Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Encryption utilities using AES-256-GCM, 2) Decryption with auth tag validation, 3) Update integration_connections schema for encrypted fields, 4) Helper to get decrypted tokens from connection. Ensure IV is unique per encryption and auth tag is verified."
+        "expansionPrompt": "Break down into: 1) Encryption utilities using AES-256-GCM, 2) Decryption with auth tag validation, 3) Update integration_connections schema for encrypted fields, 4) Helper to get decrypted tokens from connection. Ensure IV is unique per encryption and auth tag is verified.",
+        "updatedAt": "2026-11-14T16:51:59.246Z"
       },
       {
         "id": "11",
@@ -889,7 +894,7 @@
         "dependencies": [
           "10"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -897,9 +902,10 @@
             "description": "Create the core TypeScript interface definitions for the integration adapter system including IntegrationAdapter, OAuthTokens, IntegrationSource, FetchedContent, ContentItem, PublishContent, and PublishResult interfaces.",
             "dependencies": [],
             "details": "Create `src/lib/integrations/types.ts` with all interface definitions:\n\n1. Define `OAuthTokens` interface with accessToken, refreshToken, expiresAt, and scope fields\n2. Define `SourceType` enum covering 'gmail_label' | 'drive_folder' | 'confluence_space' | 'jira_project'\n3. Define `IntegrationSource` interface with id, name, type, and metadata fields\n4. Define `ContentItem` interface with id, sourceId, content, mimeType, metadata, and timestamps\n5. Define `FetchedContent` interface with items array and optional nextPageToken for pagination\n6. Define `PublishContent` and `PublishResult` interfaces for optional publish operations\n7. Define main `IntegrationAdapter` interface with provider literal type, OAuth methods (getAuthorizationUrl, exchangeCodeForTokens, refreshTokens), source discovery (listSources), content fetching (fetchContent), and optional publishing (publish)\n\nEnsure all interfaces are exported and use proper TypeScript conventions with explicit types.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript compilation succeeds with no errors. Import interfaces in a test file and confirm all types are properly exported and usable.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:02.982Z"
           },
           {
             "id": 2,
@@ -909,9 +915,10 @@
               1
             ],
             "details": "Create `src/lib/integrations/registry.ts`:\n\n1. Import `IntegrationAdapter` from './types'\n2. Create private `adapters` Map<string, IntegrationAdapter> to store registered adapters\n3. Implement `registerAdapter(adapter: IntegrationAdapter): void` function that adds adapter to map using adapter.provider as key\n4. Implement `getAdapter(provider: string): IntegrationAdapter` function that retrieves adapter by provider name, throwing descriptive error if not found\n5. Optionally add `hasAdapter(provider: string): boolean` helper for checking adapter existence without throwing\n6. Export all public functions\n\nEnsure the registry is a singleton pattern (module-level state) so adapters registered once are available throughout the application.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a mock adapter implementing IntegrationAdapter interface. Test registerAdapter adds it to registry. Test getAdapter retrieves it correctly. Test getAdapter throws for unknown provider.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:04.796Z"
           },
           {
             "id": 3,
@@ -922,14 +929,16 @@
               2
             ],
             "details": "Create `src/lib/integrations/index.ts` as barrel export:\n\n1. Re-export all types and interfaces from './types': IntegrationAdapter, OAuthTokens, IntegrationSource, FetchedContent, ContentItem, PublishContent, PublishResult, SourceType\n2. Re-export registry functions from './registry': registerAdapter, getAdapter, hasAdapter\n3. Add JSDoc comments to the index file documenting the integration framework purpose\n\nThis enables clean imports like `import { IntegrationAdapter, registerAdapter } from '@/lib/integrations'`\n\nAlso ensure the directory structure is properly created:\n- src/lib/integrations/types.ts (from subtask 1)\n- src/lib/integrations/registry.ts (from subtask 2)\n- src/lib/integrations/index.ts (this subtask)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Import all exports from '@/lib/integrations' barrel and verify all types and functions are accessible. Confirm no circular dependency issues.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:06.890Z"
           }
         ],
         "complexity": 3,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Break down into: 1) Define TypeScript interfaces for adapter, sources, and content, 2) Create adapter registry with register/get functions, 3) Define source types enum and content types. Focus on extensibility for future integrations."
+        "expansionPrompt": "Break down into: 1) Define TypeScript interfaces for adapter, sources, and content, 2) Create adapter registry with register/get functions, 3) Define source types enum and content types. Focus on extensibility for future integrations.",
+        "updatedAt": "2026-11-14T16:52:06.890Z"
       },
       {
         "id": "12",
@@ -2233,7 +2242,7 @@
           "4",
           "8"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2241,9 +2250,10 @@
             "description": "Create a server action that gathers all customer data from multiple tables (solutions, documents, calls, transcripts, sourceItems) and compiles it into a JSON export format, excluding regenerable embeddings.",
             "dependencies": [],
             "details": "Create `src/lib/export/customer-export.ts` with an `exportCustomerData` server action. Use `getCustomerConnection` to obtain the customer database connection (requires Task 4). Query all relevant tables: solutions, documents, calls, transcriptSegments, sourceItems. Fetch customer metadata from control plane via `getCustomerInfo`. Structure the export as a typed JSON object with clear sections. Exclude embeddings/chunks as they are regenerable from source content. Handle large datasets with streaming if needed. Include timestamps and metadata about the export. Return the compiled data object for downstream storage.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Create mock customer with known data across all tables\n2. Call exportCustomerData and verify JSON contains all expected records\n3. Verify embeddings/chunks are excluded from export\n4. Test with empty customer (no data) returns valid empty structure\n5. Test with large dataset to ensure memory handling",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:10.698Z"
           },
           {
             "id": 2,
@@ -2253,9 +2263,10 @@
               1
             ],
             "details": "Create `src/lib/export/export-storage.ts` implementing `storeExport(key, content)` and `getSignedUrl(key)` functions. For v1, use local filesystem storage under a gitignored `exports/` directory with a simple signing mechanism (HMAC-based URL with expiry timestamp). Key format: `exports/{customerId}/{timestamp}.json`. Generate signed URLs valid for 1 hour. Implement `cleanupExpiredExports()` for removing files older than the expiry window. Ensure export directory is created on first use. Later this can be swapped for S3/GCS via an adapter interface. Integrate with the export action to store the JSON and return the download URL.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Store test export and verify file created at correct path\n2. Generate signed URL and verify it contains valid signature and expiry\n3. Test URL validation rejects expired URLs\n4. Test URL validation rejects tampered URLs\n5. Test cleanup removes only expired files",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:12.525Z"
           },
           {
             "id": 3,
@@ -2263,9 +2274,10 @@
             "description": "Create a server action that deletes a customer after validating that the user has typed the exact customer name as confirmation, preventing accidental deletions.",
             "dependencies": [],
             "details": "Create `src/lib/customers/customer-deletion.ts` with `deleteCustomer(customerId, confirmation)` server action. First, fetch customer metadata to get the customer name. Compare `confirmation` string exactly against `customer.name` - reject if mismatch with clear error message. This is a critical safeguard against accidental deletion. On confirmation match, proceed to call the database drop service (subtask 4) and control plane cleanup. Log the deletion with timestamp and user ID for audit trail. The server action should be marked `'use server'` for Next.js server action pattern.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test deletion fails with wrong confirmation string\n2. Test deletion fails with partial match\n3. Test deletion fails with case-sensitive mismatch\n4. Test deletion succeeds with exact name match\n5. Test deletion of non-existent customer returns appropriate error",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:14.299Z"
           },
           {
             "id": 4,
@@ -2275,9 +2287,10 @@
               3
             ],
             "details": "Extend `src/lib/customers/customer-deletion.ts` with internal `dropCustomerDatabase(customer)` function. Use an admin database connection (from DATABASE_URL) to execute `DROP DATABASE \"{customer.databaseName}\"`. Wrap in transaction-like error handling: if DB drop fails, do not proceed with control plane deletion. After successful DB drop, delete from `customers` table and `customerSources` table using Drizzle. Handle edge cases: database already dropped (idempotent), database in use (error with guidance). Add safeguard preventing deletion of the control plane database itself. Consider adding a soft-delete option for recovery window before hard delete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test database is actually dropped (verify with pg_database query)\n2. Test customer record removed from control plane\n3. Test customerSources records removed\n4. Test idempotency - deleting already-deleted customer handles gracefully\n5. Test cannot delete control plane database 'robin'",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:16.183Z"
           },
           {
             "id": 5,
@@ -2288,14 +2301,16 @@
               4
             ],
             "details": "Create `src/components/customers/DeleteCustomerDialog.tsx` as a client component. Accept `customer` prop with name and id. Display prominent warning (red styling) listing all data that will be deleted: solutions, documents, call transcripts, ingested context. Show 'This action cannot be undone' message with bold/red styling. Include a text input with label `Type \"{customer.name}\" to confirm`. Disable the delete button until input exactly matches customer name. Use destructive button variant (red). Show loading state during deletion. On success, redirect to customers list or show success message. On error, display error message without closing dialog. Follow accessibility guidelines (proper aria labels, focus management).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Verify dialog displays customer name and all warning items\n2. Test delete button disabled until exact name match\n3. Test delete button enables when name matches exactly\n4. Test loading state shows during deletion API call\n5. Test error state displays properly without closing dialog\n6. Test keyboard accessibility (escape to close, tab order)",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:17.954Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Export function gathering all customer data, 2) Temporary storage and signed download URL, 3) Deletion with typed confirmation, 4) Database drop with safeguards, 5) Delete confirmation UI with warnings. Exclude embeddings from export (regenerable)."
+        "expansionPrompt": "Break down into: 1) Export function gathering all customer data, 2) Temporary storage and signed download URL, 3) Deletion with typed confirmation, 4) Database drop with safeguards, 5) Delete confirmation UI with warnings. Exclude embeddings from export (regenerable).",
+        "updatedAt": "2026-11-14T16:52:17.954Z"
       },
       {
         "id": "30",
@@ -2308,7 +2323,7 @@
           "5",
           "9"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -2316,9 +2331,10 @@
             "description": "Install and configure Vitest test runner with PostgreSQL test database utilities for isolation testing, including scripts for creating/destroying test databases and test lifecycle hooks.",
             "dependencies": [],
             "details": "Install Vitest and required dependencies: `npm install -D vitest @vitest/coverage-v8`. Create `vitest.config.ts` at project root with proper TypeScript and path alias configuration. Create `tests/` directory structure with `tests/setup.ts` for global test setup/teardown. Create `tests/utils/db.ts` with PostgreSQL test utilities: functions to create isolated test databases using the control-plane connection, drop test databases after tests, and a test database naming convention (e.g., `robin_test_{random}`). Create `tests/utils/fixtures.ts` with `TestUser` and `TestCustomer` type definitions. Add npm scripts: `test`, `test:watch`, `test:coverage` to package.json. Configure Vitest to use the test setup file for database initialization and cleanup.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `npm run test` with a simple placeholder test to verify Vitest works. Manually verify test database creation/cleanup by checking PostgreSQL for orphaned test databases after a test run.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:21.698Z"
           },
           {
             "id": 2,
@@ -2328,9 +2344,10 @@
               1
             ],
             "details": "In `tests/utils/fixtures.ts`, implement: `createTestUser(name: string)` - creates a user in control-plane DB, returns user with auth token for API testing. `createTestOrganization(userId: string)` - creates org and membership. `createTestCustomer(user: TestUser, name: string)` - calls the customer provisioning logic (from task 5) to create a customer with its own database, returns customer with connection info. `addTestSolution(customer: TestCustomer, name: string)` - inserts a solution into the customer's database. `addTestDocument(customer: TestCustomer, solutionId: string)` - adds test document data. `cleanupTestUser(user: TestUser)` - cascading cleanup including customer databases. These factories must use the actual production code paths (not mocks) to ensure tests validate real behavior. Export types: `TestUser`, `TestCustomer`, `TestSolution` with all fields needed for assertions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write a test that creates two test users with customers, verifies databases exist in PostgreSQL, then cleans up and verifies databases are dropped.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:23.473Z"
           },
           {
             "id": 3,
@@ -2340,9 +2357,10 @@
               2
             ],
             "details": "Create `tests/isolation/resolver-access.test.ts`. Test suite structure: `describe('Customer Connection Resolver Isolation')` with beforeAll creating userA (with customerA) and userB (with customerB). Tests: 1) `it('should allow owner to access their own customer')` - verify userA can get connection to customerA. 2) `it('should deny access when user tries to access other user\\'s customer')` - verify `getCustomerConnection(userA.id, customerB.id)` throws `CustomerAccessDeniedError`. 3) `it('should deny access to non-existent customer')` - verify appropriate error for invalid customer ID. 4) `it('should deny access to archived customers')` - archive customerA, then verify `getCustomerConnection(userA.id, customerA.id)` throws `CustomerArchivedError`. 5) `it('should deny access when organization membership is removed')` - remove userA from org, verify access denied. Import and use the actual `getCustomerConnection` resolver from `src/lib/db/customer-connection.ts`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the test suite and verify all access denial tests fail appropriately with the correct error types. Temporarily remove authorization checks from the resolver to confirm tests catch the regression.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:25.233Z"
           },
           {
             "id": 4,
@@ -2352,9 +2370,10 @@
               3
             ],
             "details": "Create `tests/isolation/query-isolation.test.ts` and `tests/isolation/api-authorization.test.ts`. Query isolation tests: 1) `it('should not return other customer solutions in queries')` - userA queries solutions, verify only customerA's solutions returned, not customerB's. 2) `it('should not return other customer documents')` - same pattern for documents. 3) `it('should not allow cross-database joins or references')` - verify no way to construct a query that references another customer's database. API authorization tests using fetch against the running dev server (or supertest): 1) `it('should return 403 when accessing other customer via GET /api/customers/:id')`. 2) `it('should return 403 when accessing other customer solutions via GET /api/customers/:id/solutions')`. 3) `it('should return 403 when creating solution for other customer via POST')`. 4) `it('should include proper error response body with code')`. Each request uses userA's auth token but targets customerB's resources.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run tests and verify all return expected 403 status codes. Temporarily disable auth middleware to confirm tests detect the missing authorization.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:52:27.053Z"
           },
           {
             "id": 5,
@@ -2371,7 +2390,8 @@
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Test infrastructure with Vitest and test users/customers, 2) Direct resolver access denial tests, 3) Query isolation tests via resolver, 4) API endpoint authorization tests, 5) Agent retrieval scope tests. Intentionally try to break isolation to verify protection."
+        "expansionPrompt": "Break down into: 1) Test infrastructure with Vitest and test users/customers, 2) Direct resolver access denial tests, 3) Query isolation tests via resolver, 4) API endpoint authorization tests, 5) Agent retrieval scope tests. Intentionally try to break isolation to verify protection.",
+        "updatedAt": "2026-11-14T16:52:27.053Z"
       },
       {
         "id": "31",
@@ -2393,9 +2413,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T16:47:04.331Z",
+      "lastModified": "2026-11-14T16:52:27.053Z",
       "taskCount": 31,
-      "completedCount": 10,
+      "completedCount": 13,
       "tags": [
         "master"
       ]

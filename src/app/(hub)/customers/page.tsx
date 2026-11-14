@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ActionForm } from "@/components/action-form";
 import { PageHeader } from "@/components/page-header";
 import { cardClass, primaryButtonClass } from "@/components/ui";
 import { listCustomers } from "@/lib/customers";
 import { formatDate } from "@/lib/hub";
 import { requireUser } from "@/lib/session";
+
+import { restoreCustomerAction } from "./actions";
 
 export const metadata: Metadata = { title: "Customers" };
 
@@ -54,10 +57,25 @@ export default async function CustomersPage() {
           <summary className="text-muted cursor-pointer">
             Archived ({archived.length})
           </summary>
-          <ul className="text-muted mt-2 flex flex-col gap-1 pl-4">
+          <p className="text-muted mt-2">
+            Archived customers keep their data but cannot be opened. Restore one
+            to use, export or permanently delete it.
+          </p>
+          <ul className="mt-3 flex flex-col gap-3">
             {archived.map((customer) => (
-              <li key={customer.id}>
-                {customer.name} — archived {formatDate(customer.updatedAt)}
+              <li
+                key={customer.id}
+                className="flex flex-wrap items-center justify-between gap-3"
+              >
+                <span className="text-muted">
+                  {customer.name} — archived {formatDate(customer.updatedAt)}
+                </span>
+                <ActionForm
+                  action={restoreCustomerAction.bind(null, customer.id)}
+                  submitLabel={`Restore ${customer.name}`}
+                  variant="secondary"
+                  className="flex flex-col items-end gap-2"
+                />
               </li>
             ))}
           </ul>

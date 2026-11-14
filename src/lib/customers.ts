@@ -2,13 +2,15 @@ import { and, asc, eq, sql } from "drizzle-orm";
 
 import { getControlPlaneDb } from "@/db/control-plane/connection";
 import { customers, type Customer } from "@/db/control-plane/schema";
-import { isUuid } from "@/db/customer/database-url";
+import { customerDatabaseName, isUuid } from "@/db/customer/database-url";
 
 import {
   archiveCustomerDatabase,
   createCustomer as provisionCustomer,
+  dropCustomerDatabase,
+  restoreCustomerDatabase,
 } from "./customer-provisioning";
-import { requiredText } from "./validation";
+import { requiredText, ValidationError } from "./validation";
 
 export const CUSTOMER_NAME_MAX_LENGTH = 120;
 
@@ -109,5 +111,39 @@ export async function archiveCustomer(
   const customer = await getCustomer(organizationId, customerId);
   if (!customer) return false;
   await archiveCustomerDatabase(customer.id);
+  return true;
+}
+
+/**
+ * Brings an archived customer back. Returns false if the customer is not
+ * the organisation's.
+ */
+export async function restoreCustomer(
+  organizationId: string,
+  customerId: string,
+): Promise<boolean> {
+  const customer = await getCustomer(organizationId, customerId);
+  if (!customer) return false;
+  await restoreCustomerDatabase(customer.id);
+  return true;
+}
+
+/**
+ * PERMANENTLY deletes one of the organisation's customers and all of its
+ * content (its database is dropped). The caller must pass the customer's
+ * exact name as confirmation. Returns false if the customer is not theirs.
+ * @throws ValidationError if the confirmation does not match.
+ */
+export async function deleteCustomer(
+  organizationId: string,
+  customerId: string,
+  confirmation: unknown,
+): Promise<boolean> {
+  const customer = await getCustomer(organizationId, customerId);
+  if (!customer) return false;
+  if (confirmation !== customer.name) {
+    throw new ValidationError("Type the customer's name exactly to confirm.");
+  }
+  await dropCustomerDatabase(customer.id, customerDatabaseName(customer.id));
   return true;
 }

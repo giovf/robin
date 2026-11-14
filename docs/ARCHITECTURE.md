@@ -36,7 +36,12 @@ ownership are in the data model from day one, even though v1 is single-user.
 - `src/app/(auth)/` — login and sign-up; `src/app/(hub)/` — the signed-in hub
   (layout gates on the session inside `<Suspense>`, as Cache Components requires)
 - `src/components/` — shared UI; design tokens in `src/app/globals.css`
-- `src/test/` — Vitest global setup and fixtures; tests are colocated
+- `src/lib/integrations/` — the adapter interface (`types.ts`), registry,
+  encrypted connection storage and a fake adapter for tests
+- `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
+  pages and server actions call; actions stay thin
+- `src/test/` — Vitest global setup, fixtures and the customer-isolation suite
+  (`isolation.test.ts`); other tests are colocated
   `*.test.ts` and run against a throwaway `robin_test` control plane
 - `drizzle.config.ts` / `drizzle.customer.config.ts` — the two migration
   tracks; generated SQL lands in `drizzle/control-plane` and `drizzle/customer`

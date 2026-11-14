@@ -378,6 +378,11 @@ prompted it.
   the real list is agreed: Discovery, Solution design, Proposal, Delivery, Handover,
   Operations. Phases are stored as text, so changing the list needs no migration. Archived
   customers are hidden and inaccessible in the hub (data kept).
+- 2026-11-14 — Export and deletion: the per-customer export is a JSON file streamed on
+  request (nothing is stored server-side; embedding vectors are omitted as derived data).
+  Archiving is reversible (restore); permanent deletion drops the customer database and
+  requires typing the customer's name. OAuth tokens are encrypted with AES-256-GCM
+  (`TOKEN_ENCRYPTION_KEY`). CI workflow added (GitHub Actions with a pgvector service).
 
 </PRD>
 

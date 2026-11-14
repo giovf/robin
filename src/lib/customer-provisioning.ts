@@ -141,6 +141,30 @@ export async function archiveCustomerDatabase(
 }
 
 /**
+ * Reverses archiveCustomerDatabase: renames the database back and marks the
+ * customer active again. Idempotent.
+ */
+export async function restoreCustomerDatabase(
+  customerId: string,
+): Promise<void> {
+  const databaseName = customerDatabaseName(customerId);
+  const archivedName = ARCHIVED_PREFIX + databaseName;
+  if (await databaseExists(archivedName)) {
+    await terminateConnections(archivedName);
+    await getControlPlaneDb().execute(
+      sql.raw(
+        `alter database ${ident(archivedName)} rename to ${ident(databaseName)}`,
+      ),
+    );
+  }
+  await migrateCustomerDatabase(databaseName);
+  await getControlPlaneDb()
+    .update(customers)
+    .set({ status: "active" })
+    .where(eq(customers.id, customerId));
+}
+
+/**
  * PERMANENTLY deletes all of a customer's content (GDPR deletion): drops its
  * database, live or archived, and removes it from the registry.
  *

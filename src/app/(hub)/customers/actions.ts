@@ -6,8 +6,10 @@ import { redirect } from "next/navigation";
 import {
   archiveCustomer,
   createCustomer,
+  deleteCustomer,
   getCustomer,
   renameCustomer,
+  restoreCustomer,
 } from "@/lib/customers";
 import { runFormAction, type FormState } from "@/lib/form-action";
 import { requireUser } from "@/lib/session";
@@ -54,6 +56,36 @@ export async function archiveCustomerAction(
       return { error: "Type the customer's name exactly to confirm." };
     }
     await archiveCustomer(user.organizationId, customerId);
+    redirect("/customers");
+  });
+}
+
+export async function restoreCustomerAction(
+  customerId: string,
+  _previous: FormState,
+): Promise<FormState> {
+  return runFormAction(async () => {
+    const user = await requireUser();
+    if (!(await restoreCustomer(user.organizationId, customerId))) {
+      return { error: "This customer is not available." };
+    }
+    redirect(`/customers/${customerId}`);
+  });
+}
+
+export async function deleteCustomerAction(
+  customerId: string,
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return runFormAction(async () => {
+    const user = await requireUser();
+    const deleted = await deleteCustomer(
+      user.organizationId,
+      customerId,
+      formData.get("confirm-delete"),
+    );
+    if (!deleted) return { error: "This customer is not available." };
     redirect("/customers");
   });
 }

@@ -26,6 +26,9 @@ export default defineConfig({
     env: {
       DATABASE_URL: testUrl.toString(),
       ROBIN_ADMIN_DATABASE_URL: devUrl,
+      AUTH_SECRET: "test-only-secret-test-only-secret-0123456789",
+      APP_URL: "http://localhost:3000",
+      ALLOW_SIGNUP: "",
     },
   },
 });

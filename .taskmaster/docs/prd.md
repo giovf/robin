@@ -369,6 +369,11 @@ Newest first. One dated line per change to this PRD, with the Taskmaster task ID
 prompted it.
 
 - 2026-11-14 — Initial PRD approved.
+- 2026-11-14 — Login decided for v1 (open question 5): email + password with the
+  better-auth library, 7-day sessions, minimum password length 12. Because v1 is
+  single-user, sign-up closes once the first account exists (`ALLOW_SIGNUP=true` reopens
+  it). First sign-up creates the user's organisation. Google sign-in can be added later
+  through the same library.
 
 </PRD>
 

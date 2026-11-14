@@ -30,6 +30,12 @@ ownership are in the data model from day one, even though v1 is single-user.
   (`getCustomerConnection(userId, customerId)`)
 - `src/lib/customer-provisioning.ts` — create / migrate / archive / drop
   customer databases (named `customer_<uuid>`)
+- `src/lib/auth.ts`, `src/lib/session.ts` — better-auth setup and
+  `getCurrentUser()` / `requireUser()`; `src/proxy.ts` only does an optimistic
+  cookie redirect
+- `src/app/(auth)/` — login and sign-up; `src/app/(hub)/` — the signed-in hub
+  (layout gates on the session inside `<Suspense>`, as Cache Components requires)
+- `src/components/` — shared UI; design tokens in `src/app/globals.css`
 - `src/test/` — Vitest global setup and fixtures; tests are colocated
   `*.test.ts` and run against a throwaway `robin_test` control plane
 - `drizzle.config.ts` / `drizzle.customer.config.ts` — the two migration
@@ -65,8 +71,9 @@ that introduce it — record it here when it exists.
   retrieval read only that customer's database.
 - **Migrations:** two Drizzle tracks — control plane, and customer schema
   (applied to every customer database on provisioning and on upgrade).
-- **Auth:** login required; every customer belongs to an organisation. No org
-  management or permissions in v1.
+- **Auth:** login required (better-auth, email + password, sessions in the
+  control plane); sign-up closes after the first account. Every customer
+  belongs to an organisation. No org management or permissions in v1.
 
 ## External services
 

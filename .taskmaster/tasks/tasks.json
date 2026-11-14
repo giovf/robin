@@ -481,7 +481,7 @@
         "dependencies": [
           "2"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -489,9 +489,10 @@
             "description": "Research authentication options compatible with Next.js 16 and Drizzle ORM, select better-auth or alternative, and install with dependencies.",
             "dependencies": [],
             "details": "1. Check Next.js 16 compatibility in `node_modules/next/dist/docs/` for any auth-related breaking changes\n2. Evaluate better-auth vs alternatives (next-auth v5, lucia) for: Drizzle ORM support, session-based auth (not JWT), TypeScript strict compatibility, minimal config\n3. Install chosen library: `npm install better-auth@latest` (or alternative)\n4. Install required peer dependencies if any (e.g., `@better-auth/drizzle-adapter`)\n5. Verify package.json updated correctly and no version conflicts with Next.js 16 or React 19\n6. Document the decision rationale in a code comment in the auth config file",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Verify package installs without npm errors\n2. Check no peer dependency warnings\n3. Verify TypeScript can resolve the package types\n4. Confirm no breaking changes in Next.js 16 docs affect chosen library",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:40:53.056Z"
           },
           {
             "id": 2,
@@ -501,9 +502,10 @@
               1
             ],
             "details": "1. Create `src/lib/auth.ts` with the auth instance configuration\n2. Configure email/password authentication (starting point per PRD open questions)\n3. Set session expiration to 7 days: `session: { expiresIn: 60 * 60 * 24 * 7 }`\n4. Integrate with Drizzle ORM using the control-plane pool (from task 2's database setup)\n5. Configure secure cookie settings: httpOnly, secure in production, sameSite strict\n6. Export typed auth instance for use in route handlers\n7. Ensure configuration uses environment variables for any secrets\n8. Add explicit TypeScript return types on all exported functions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. TypeScript compiles without errors\n2. Auth instance initializes without runtime errors\n3. Drizzle connection is properly passed to auth library\n4. Session configuration values are correct",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:40:54.682Z"
           },
           {
             "id": 3,
@@ -513,9 +515,10 @@
               2
             ],
             "details": "1. Create `src/app/api/auth/[...all]/route.ts` using Next.js 16 App Router conventions\n2. Export GET and POST handlers that delegate to the auth library\n3. Handle endpoints: /api/auth/signup, /api/auth/signin, /api/auth/signout, /api/auth/session\n4. Ensure proper error responses with appropriate HTTP status codes\n5. Check Next.js 16 docs for any breaking changes in route handlers\n6. Use default export only for the route.ts file (per project conventions)\n7. Add CSRF protection if not built into the auth library\n8. Ensure cookies are set with proper security attributes",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. POST /api/auth/signup creates a user and returns session\n2. POST /api/auth/signin with valid credentials returns session\n3. POST /api/auth/signin with invalid credentials returns 401\n4. POST /api/auth/signout clears session cookie\n5. GET /api/auth/session returns current session or null",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:40:56.229Z"
           },
           {
             "id": 4,
@@ -526,9 +529,10 @@
               3
             ],
             "details": "1. Create `src/lib/auth-utils.ts` with explicit TypeScript types\n2. Implement `getSession(): Promise<Session | null>` that reads session from cookies and validates\n3. Implement `requireAuth(): Promise<Session>` that throws redirect('/login') if no valid session\n4. Implement `getCurrentUser(): Promise<User | null>` convenience wrapper\n5. Define Session and User types (or re-export from auth library)\n6. Handle session expiry gracefully - return null, don't throw\n7. Cache session within request to avoid redundant database lookups\n8. Use Next.js 16 `redirect()` function correctly (check docs for breaking changes)\n9. Export named exports only (per project conventions)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. getSession returns null when no session cookie exists\n2. getSession returns session data when valid cookie exists\n3. getSession returns null for expired sessions\n4. requireAuth redirects to /login when no session\n5. requireAuth returns session when authenticated",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:40:57.772Z"
           },
           {
             "id": 5,
@@ -539,9 +543,10 @@
               4
             ],
             "details": "1. Add `onUserCreated` hook/callback to auth configuration in `src/lib/auth.ts`\n2. In the hook, create a default organization: `INSERT INTO organizations (name) VALUES ('${user.name}'s Organization')`\n3. Create owner membership: `INSERT INTO memberships (userId, organizationId, role) VALUES (?, ?, 'owner')`\n4. Use transactions to ensure atomicity - if membership fails, rollback organization creation\n5. Handle the case where user.name might be null (use email prefix as fallback)\n6. Log onboarding for debugging (but no PII in logs)\n7. Ensure this only runs on first signup, not on subsequent logins\n8. Consider adding createdAt timestamp to organization",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Sign up new user → verify organization created with correct name\n2. Verify membership created with role='owner'\n3. Verify transaction rollback if membership insert fails\n4. Login existing user → verify no duplicate organization created\n5. Sign up user without name → verify fallback organization name",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:40:59.334Z"
           },
           {
             "id": 6,
@@ -552,14 +557,16 @@
               4
             ],
             "details": "1. Create auth route group: `src/app/(auth)/layout.tsx` with minimal auth-page layout (no main nav)\n2. Create `src/app/(auth)/login/page.tsx` with email/password form\n3. Create `src/app/(auth)/signup/page.tsx` with email/password/name form\n4. Use Server Components by default; add 'use client' only to form components\n5. Implement client-side form validation (email format, password requirements)\n6. Display server-side errors (invalid credentials, email taken, etc.)\n7. Add loading states during form submission\n8. Redirect to hub (/) on successful auth using useRouter or server redirect\n9. Style with Tailwind CSS using design tokens from globals.css\n10. Ensure forms are accessible: labels, aria attributes, keyboard navigation\n11. Add 'Already have an account?' / 'Need an account?' links between pages",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Login page renders without errors\n2. Signup page renders without errors\n3. Form validation shows errors for invalid email format\n4. Successful login redirects to /\n5. Successful signup redirects to / (after onboarding completes)\n6. Invalid credentials show error message\n7. Keyboard navigation works (Tab through form, Enter to submit)\n8. Screen reader can navigate form correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:42:16.065Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Auth library selection and installation, 2) Auth configuration with database integration, 3) API route handlers for auth endpoints, 4) Session utilities (getSession, requireAuth), 5) First-user onboarding (create user + organization + membership), 6) Login/signup pages with forms. Consider cookie security and session storage."
+        "expansionPrompt": "Break down into: 1) Auth library selection and installation, 2) Auth configuration with database integration, 3) API route handlers for auth endpoints, 4) Session utilities (getSession, requireAuth), 5) First-user onboarding (create user + organization + membership), 6) Login/signup pages with forms. Consider cookie security and session storage.",
+        "updatedAt": "2026-11-14T16:42:16.065Z"
       },
       {
         "id": "7",
@@ -571,7 +578,7 @@
         "dependencies": [
           "6"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -579,9 +586,10 @@
             "description": "Update the root layout.tsx with Robin app metadata and expand Tailwind 4 @theme design tokens for the full color palette, spacing, and component styling needed by the app shell.",
             "dependencies": [],
             "details": "1. Update `src/app/layout.tsx` metadata from 'Create Next App' to Robin-specific title/description.\n2. Expand `src/app/globals.css` with comprehensive @theme design tokens including:\n   - Primary, accent, muted, and destructive color scales\n   - Sidebar-specific colors (background, foreground, border, hover states)\n   - Border radius, shadow, and focus ring tokens\n   - Ensure dark mode variants are defined\n3. Keep the Geist font variables as they work well for a professional app.\n4. Body styling should use the new design tokens.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify the app loads without CSS errors. Check that both light and dark mode display correctly. Confirm all design tokens are accessible in browser dev tools via CSS custom properties.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:42:19.380Z"
           },
           {
             "id": 2,
@@ -591,9 +599,10 @@
               1
             ],
             "details": "1. Create directory `src/app/(hub)/`.\n2. Create `src/app/(hub)/layout.tsx` as an async Server Component.\n3. Import and call `requireAuth()` from `src/lib/auth` (this may not exist yet - use a placeholder import that can be updated when Task 6 is complete).\n4. Render the shell structure: flex container with Sidebar on left and main content area with overflow-auto.\n5. Pass session.user to Sidebar component.\n6. Use TypeScript's LayoutProps type for proper typing.\n7. Create placeholder Sidebar component to avoid build errors.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to any (hub) route and verify the layout renders. Check that the flex layout creates the expected sidebar + main structure. Temporarily bypass auth check to test layout renders correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:42:21.395Z"
           },
           {
             "id": 3,
@@ -604,9 +613,10 @@
               2
             ],
             "details": "1. Create `src/components/Sidebar.tsx` as a Client Component (needs usePathname for active state).\n2. Props interface: user object with name, email, and optional avatar.\n3. Navigation items array: Dashboard (/), Customers (/customers), Integrations (/integrations).\n4. Use Next.js Link component for navigation.\n5. Implement active route highlighting using usePathname() - highlight if current path matches or starts with link path.\n6. Add CustomerSwitcher component placeholder at top of sidebar.\n7. Add UserMenu component placeholder at bottom of sidebar.\n8. Style using design tokens from globals.css (sidebar-specific colors).\n9. Fixed width sidebar (e.g., 240px) with border-right.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify sidebar renders with all nav items. Click each nav link and confirm navigation works. Check that active route is visually highlighted. Test at different viewport heights to ensure sidebar scrolls appropriately if needed.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:42:23.138Z"
           },
           {
             "id": 4,
@@ -617,9 +627,10 @@
               3
             ],
             "details": "1. Create `src/components/CustomerSwitcher.tsx`:\n   - Display current customer name (placeholder for now)\n   - Dropdown to show customer list and allow switching\n   - Use a simple select or custom dropdown pattern\n   - Add visual indicator (company icon or initials)\n\n2. Create `src/components/UserMenu.tsx`:\n   - Props: user object with name, email, optional avatar\n   - Display user avatar (or initials fallback)\n   - Dropdown with Settings link and Sign Out button\n   - Sign out calls the auth signOut function (placeholder for now)\n   - Client Component for dropdown interactivity\n\n3. Both components should be visually consistent with sidebar design.\n4. Use accessible dropdown patterns with keyboard navigation support.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify CustomerSwitcher displays placeholder customer name. Test dropdown opens and closes. Verify UserMenu shows user info correctly. Test sign out button exists and is clickable (actual sign out tested when auth is implemented).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:42:24.766Z"
           },
           {
             "id": 5,
@@ -629,14 +640,16 @@
               2
             ],
             "details": "1. Create `src/app/(hub)/page.tsx` - Dashboard home page with welcome message and placeholder content.\n2. Create `src/app/(hub)/customers/page.tsx` - Customer list page placeholder.\n3. Create `src/app/(hub)/customers/[customerId]/page.tsx` - Single customer view placeholder, extract customerId from params.\n4. Create `src/app/(hub)/customers/[customerId]/solutions/page.tsx` - Customer solutions list placeholder.\n5. Create `src/app/(auth)/layout.tsx` - Minimal layout for auth pages (no sidebar).\n6. Create `src/app/(auth)/login/page.tsx` - Login page placeholder.\n7. Each page should export default function with proper typing.\n8. Use consistent heading and placeholder text styling.\n9. Dynamic routes should display the extracted parameter.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate to each route and verify page renders: /, /customers, /customers/test-id, /customers/test-id/solutions, /login. Verify hub pages show sidebar, login page does not. Verify dynamic routes display the customerId parameter correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:42:26.371Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Update root layout with global styling, 2) Create (hub) route group layout with auth check, 3) Sidebar component with navigation items, 4) CustomerSwitcher component for context display, 5) UserMenu component with sign out, 6) Route structure placeholder pages. Use Tailwind 4 @theme syntax for design tokens."
+        "expansionPrompt": "Break down into: 1) Update root layout with global styling, 2) Create (hub) route group layout with auth check, 3) Sidebar component with navigation items, 4) CustomerSwitcher component for context display, 5) UserMenu component with sign out, 6) Route structure placeholder pages. Use Tailwind 4 @theme syntax for design tokens.",
+        "updatedAt": "2026-11-14T16:42:26.371Z"
       },
       {
         "id": "8",
@@ -2368,9 +2381,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T16:36:49.029Z",
+      "lastModified": "2026-11-14T16:42:26.371Z",
       "taskCount": 31,
-      "completedCount": 6,
+      "completedCount": 8,
       "tags": [
         "master"
       ]

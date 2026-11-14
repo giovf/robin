@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. Colours are defined once as CSS variables (light, then dark)
+ * and exposed to Tailwind through @theme, e.g. `bg-surface text-ink`.
+ * Text/background pairs meet WCAG 2.1 AA contrast in both schemes.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --canvas: #f6f4f0;
+  --surface: #ffffff;
+  --sunken: #edeae4;
+  --ink: #1d2430;
+  --muted: #5a6474;
+  --line: #d9d4cb;
+  --accent: #b53a16;
+  --accent-hover: #972f10;
+  --accent-soft: #fbe9e2;
+  --on-accent: #ffffff;
+  --danger: #b3261e;
+  --danger-soft: #fdecea;
+  --success: #1f6b45;
+  --success-soft: #e4f3ea;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --canvas: #12161c;
+    --surface: #1a2029;
+    --sunken: #0d1015;
+    --ink: #edf0f4;
+    --muted: #a3adbb;
+    --line: #313a47;
+    --accent: #ff8a62;
+    --accent-hover: #ffa283;
+    --accent-soft: #3a2018;
+    --on-accent: #1b0d07;
+    --danger: #ff8f88;
+    --danger-soft: #3a1917;
+    --success: #7fd3a4;
+    --success-soft: #15301f;
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-control: 0.5rem;
+  --radius-card: 0.875rem;
+}
+
+@layer base {
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

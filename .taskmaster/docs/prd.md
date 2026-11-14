@@ -388,6 +388,10 @@ prompted it.
   `<APP_URL>/api/integrations/google/callback`. A Gmail source is either a label or a Gmail
   search (addresses/domains); a Drive source is a folder (Docs, Sheets, Slides and text
   files are read; PDFs and Office files wait for the upload/extraction work).
+- 2026-11-14 — Atlassian integration (Confluence spaces, Jira projects) added the same way.
+  It connects with read-only scopes; the write scopes needed for publishing
+  (`write:confluence-content`, `write:jira-work`) are requested only when publishing is
+  built, so a connection made today cannot write to the customer's systems.
 
 </PRD>
 

@@ -1,6 +1,7 @@
 import type { IntegrationProvider } from "@/db/control-plane/schema";
 import { requireEnv } from "@/db/env";
 
+import { AtlassianAdapter } from "./atlassian/adapter";
 import { GoogleAdapter } from "./google/adapter";
 import { getAdapter, hasAdapter, registerAdapter } from "./registry";
 import type { IntegrationAdapter } from "./types";
@@ -23,7 +24,7 @@ export const PROVIDERS: readonly ProviderInfo[] = [
   {
     provider: "atlassian",
     name: "Atlassian",
-    description: "Confluence and Jira.",
+    description: "Confluence and Jira (read-only).",
     requiredEnv: ["ATLASSIAN_CLIENT_ID", "ATLASSIAN_CLIENT_SECRET"],
   },
 ];
@@ -40,6 +41,18 @@ function build(provider: IntegrationProvider): IntegrationAdapter | null {
     return new GoogleAdapter({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    });
+  }
+  if (provider === "atlassian") {
+    if (
+      !process.env.ATLASSIAN_CLIENT_ID ||
+      !process.env.ATLASSIAN_CLIENT_SECRET
+    ) {
+      return null;
+    }
+    return new AtlassianAdapter({
+      clientId: process.env.ATLASSIAN_CLIENT_ID,
+      clientSecret: process.env.ATLASSIAN_CLIENT_SECRET,
     });
   }
   return null;

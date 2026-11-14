@@ -1963,7 +1963,7 @@
         "dependencies": [
           "11"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1971,9 +1971,10 @@
             "description": "Create the OAuth 2.0 authorization flow for Atlassian, including the unique accessible-resources step to discover available sites (Confluence/Jira instances the user has access to).",
             "dependencies": [],
             "details": "Create `src/lib/integrations/atlassian/adapter.ts` with the core OAuth methods:\n\n1. `getAuthorizationUrl(state, scopes)` - Build authorization URL with:\n   - `audience: 'api.atlassian.com'`\n   - Required scopes passed as parameter\n   - Redirect URI to `/api/integrations/atlassian/callback`\n   - `response_type: 'code'` and `prompt: 'consent'`\n\n2. Create API routes:\n   - `src/app/api/integrations/atlassian/authorize/route.ts` - Initiate OAuth flow\n   - `src/app/api/integrations/atlassian/callback/route.ts` - Handle callback, exchange code for tokens\n\n3. Implement token exchange using `https://auth.atlassian.com/oauth/token`\n\n4. After token exchange, call `GET https://api.atlassian.com/oauth/token/accessible-resources` to discover available Atlassian sites (cloud IDs). Store the site list with the connection for multi-site support.\n\n5. Implement token refresh using refresh_token grant type\n\n6. Store encrypted tokens in control-plane `integration_connections` table with provider='atlassian' and include accessible sites metadata",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test OAuth URL generation includes correct audience and scopes\n2. Test callback properly exchanges code for tokens\n3. Test accessible-resources call returns site list\n4. Test token refresh flow\n5. Test encrypted token storage",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:01:31.274Z"
           },
           {
             "id": 2,
@@ -1983,9 +1984,10 @@
               1
             ],
             "details": "Extend the Atlassian adapter with Confluence space listing:\n\n1. Add `listConfluenceSpaces(cloudId: string, tokens: OAuthTokens)` function that calls:\n   - `GET https://api.atlassian.com/ex/confluence/{cloudId}/wiki/rest/api/space`\n   - Handle pagination if there are many spaces\n\n2. Implement `listSources(tokens, 'confluence_space')` in the adapter that:\n   - Retrieves the stored accessible sites\n   - Calls `listConfluenceSpaces` for the selected site (or first site for v1)\n   - Returns normalized list: `{ id, name, type: 'confluence_space', metadata: { cloudId, spaceKey } }`\n\n3. Handle multi-site scenarios by allowing site selection if user has access to multiple Confluence instances\n\n4. Required scope: `read:confluence-content.all`\n\n5. Map Confluence API response to the integration framework's source format for storage in `customer_sources` table",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test listConfluenceSpaces returns correct space list\n2. Test pagination handling for large space counts\n3. Test proper error handling for permission denied\n4. Test multi-site selection logic",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:01:33.109Z"
           },
           {
             "id": 3,
@@ -1995,9 +1997,10 @@
               1
             ],
             "details": "Extend the Atlassian adapter with Jira project listing:\n\n1. Add `listJiraProjects(cloudId: string, tokens: OAuthTokens)` function that calls:\n   - `GET https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/project/search`\n   - Handle pagination using startAt and maxResults\n\n2. Implement `listSources(tokens, 'jira_project')` in the adapter that:\n   - Retrieves the stored accessible sites\n   - Calls `listJiraProjects` for the selected site\n   - Returns normalized list: `{ id, name, type: 'jira_project', metadata: { cloudId, projectKey } }`\n\n3. Handle multi-site scenarios (same user may have access to multiple Jira instances)\n\n4. Required scope: `read:jira-work`\n\n5. Map Jira API response to the integration framework's source format, including project key, name, and avatar URL for display",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test listJiraProjects returns correct project list\n2. Test pagination handling\n3. Test proper error handling for inaccessible projects\n4. Test both Confluence and Jira can be listed from same connection",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:01:34.891Z"
           },
           {
             "id": 4,
@@ -2008,9 +2011,10 @@
               3
             ],
             "details": "Implement `fetchContent(tokens, source)` in the adapter:\n\n1. For Confluence spaces:\n   - `GET https://api.atlassian.com/ex/confluence/{cloudId}/wiki/rest/api/space/{spaceKey}/content` to list pages\n   - `GET https://api.atlassian.com/ex/confluence/{cloudId}/wiki/rest/api/content/{pageId}?expand=body.storage,version` for full page content\n   - Extract text from HTML body.storage.value\n   - Return normalized content items with metadata (title, URL, lastModified, author)\n\n2. For Jira projects:\n   - `GET https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/search?jql=project={projectKey}` to list issues\n   - Include fields: summary, description, status, assignee, created, updated, comments\n   - Handle pagination for large projects\n   - Return normalized content items suitable for chunking\n\n3. Implement incremental sync by tracking last sync timestamp and using updatedDate filters\n\n4. Handle attachments: log but skip binary attachments, extract text from supported formats if feasible\n\n5. Map content to the ingestion pipeline's expected format for chunking and embedding",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test fetching pages from a Confluence space\n2. Test fetching issues from a Jira project\n3. Test incremental sync only fetches updated content\n4. Test content extraction produces clean text\n5. Test handling of large spaces/projects with many items",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:01:36.677Z"
           },
           {
             "id": 5,
@@ -2020,14 +2024,16 @@
               4
             ],
             "details": "Implement `publish(tokens, content, confirmation)` in the adapter:\n\n1. For Confluence publishing:\n   - Create page: `POST https://api.atlassian.com/ex/confluence/{cloudId}/wiki/rest/api/content`\n   - Update page: `PUT https://api.atlassian.com/ex/confluence/{cloudId}/wiki/rest/api/content/{pageId}`\n   - Required scope: `write:confluence-content`\n   - Include proper versioning for updates (increment version number)\n\n2. For Jira issue creation:\n   - `POST https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/issue`\n   - Required scope: `write:jira-work`\n   - Support setting project, issue type, summary, description, and labels\n\n3. Implement confirmation flow:\n   - Publish method must receive a `confirmationToken` that proves user explicitly confirmed the write\n   - Store audit record in customer database: timestamp, action, target URL, content hash\n   - Return the created/updated resource URL for display to user\n\n4. Preview endpoint to generate a dry-run view of what will be published without making the API call\n\n5. Error handling: surface Atlassian API errors (permission denied, invalid content) as user-friendly messages",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test Confluence page creation with proper body format\n2. Test Confluence page update increments version\n3. Test Jira issue creation with required fields\n4. Test publish fails without valid confirmation token\n5. Test audit record is stored for each write operation\n6. Test preview endpoint returns expected output without side effects",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:01:38.476Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) OAuth flow for Atlassian with accessible resources, 2) Confluence space listing, 3) Jira project listing, 4) Content fetching for Confluence pages and Jira issues, 5) Publish method with confirmation flow. Handle multi-site scenarios."
+        "expansionPrompt": "Break down into: 1) OAuth flow for Atlassian with accessible resources, 2) Confluence space listing, 3) Jira project listing, 4) Content fetching for Confluence pages and Jira issues, 5) Publish method with confirmation flow. Handle multi-site scenarios.",
+        "updatedAt": "2026-11-14T17:01:38.476Z"
       },
       {
         "id": "26",
@@ -2431,9 +2437,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T16:58:42.801Z",
+      "lastModified": "2026-11-14T17:01:38.477Z",
       "taskCount": 31,
-      "completedCount": 16,
+      "completedCount": 17,
       "tags": [
         "master"
       ]

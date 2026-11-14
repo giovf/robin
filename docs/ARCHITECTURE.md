@@ -42,6 +42,8 @@ ownership are in the data model from day one, even though v1 is single-user.
   integration sync; `src/lib/retrieval.ts` — similarity search within one
   customer; `src/lib/embeddings.ts` — the `EmbeddingProvider` interface (only
   a local hashing stand-in exists until a provider is chosen)
+- `src/lib/agent/` — the per-customer agent (`getCustomerAgent`), its prompts,
+  and the `LlmClient` interface (Anthropic implementation + a fake for tests)
 - `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
   pages and server actions call; actions stay thin
 - `src/test/` — Vitest global setup, fixtures and the customer-isolation suite

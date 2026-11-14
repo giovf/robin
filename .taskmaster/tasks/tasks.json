@@ -1357,7 +1357,7 @@
         "dependencies": [
           "16"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1365,9 +1365,10 @@
             "description": "Install the Anthropic SDK and create the foundational CustomerAgent class with constructor that accepts customer-scoped database connection.",
             "dependencies": [],
             "details": "Run `npm install @anthropic-ai/sdk@latest` to add the Anthropic SDK.\n\nCreate `src/lib/agent/customer-agent.ts` with the base CustomerAgent class:\n\n```typescript\nimport Anthropic from '@anthropic-ai/sdk';\nimport type { CustomerDb } from '@/lib/customer-connection';\n\nexport class CustomerAgent {\n  private anthropic: Anthropic;\n  private customerId: string;\n  private customerDb: CustomerDb;\n  \n  constructor(customerId: string, customerDb: CustomerDb) {\n    this.anthropic = new Anthropic({ apiKey: process.env.ROBIN_ANTHROPIC_API_KEY });\n    this.customerId = customerId;\n    this.customerDb = customerDb;\n  }\n}\n```\n\nCreate `src/lib/agent/types.ts` with core type definitions: `SuggestionContext`, `Suggestion`, `RetrievedChunk`, `DraftedDocument`. The CustomerDb type ensures customer isolation - the agent can only access data through this scoped connection. Add env var ROBIN_ANTHROPIC_API_KEY to .env.example.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify npm install succeeds. Run `npm run typecheck` to confirm imports work. Test that CustomerAgent constructor initializes without error when passed valid customerDb mock. Verify Anthropic client instantiates with API key.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:05.947Z"
           },
           {
             "id": 2,
@@ -1377,9 +1378,10 @@
               1
             ],
             "details": "Add to CustomerAgent class in `src/lib/agent/customer-agent.ts`:\n\n```typescript\nimport { retrieveContext } from '@/lib/retrieval';\n\nasync generateSuggestions(context: SuggestionContext): Promise<Suggestion[]> {\n  // 1. Retrieve relevant context from customer's database ONLY\n  const retrieved = await retrieveContext(this.customerDb, context.recentTranscript, {\n    limit: 10,\n    threshold: 0.7,\n  });\n  \n  // 2. Build prompt with retrieved context and solution phase\n  const prompt = buildSuggestionPrompt(context, retrieved);\n  \n  // 3. Call Claude\n  const response = await this.anthropic.messages.create({\n    model: 'claude-sonnet-4-20250514',\n    max_tokens: 1024,\n    messages: [{ role: 'user', content: prompt }],\n  });\n  \n  return parseSuggestions(response.content);\n}\n```\n\nCreate `src/lib/agent/prompts.ts` with `buildSuggestionPrompt(context: SuggestionContext, retrieved: RetrievedChunk[]): string`. Prompt should include: current transcript, solution phase, customer context, and instruction to suggest relevant questions. Create `src/lib/agent/parsers.ts` with `parseSuggestions()` to extract structured suggestions from Claude response (parse JSON or numbered list format).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test buildSuggestionPrompt produces valid prompt with all context included. Unit test parseSuggestions handles Claude response formats. Integration test: create mock customer DB with test chunks, call generateSuggestions with sample transcript, verify returns Suggestion[] array with text and rationale.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:07.952Z"
           },
           {
             "id": 3,
@@ -1389,9 +1391,10 @@
               1
             ],
             "details": "Add to CustomerAgent class:\n\n```typescript\nasync draftDocument(template: string, solutionId: string): Promise<DraftedDocument> {\n  // 1. Fetch solution details from customer DB\n  const solution = await this.customerDb.query.solutions.findFirst({\n    where: eq(solutions.id, solutionId)\n  });\n  \n  // 2. Retrieve context relevant to solution and template type\n  const retrieved = await retrieveContext(this.customerDb, \n    `${solution.name} ${solution.description} ${template}`, \n    { limit: 20, sourceTypes: ['document', 'transcript'] }\n  );\n  \n  // 3. Build document drafting prompt\n  const prompt = buildDocumentPrompt(template, solution, retrieved);\n  \n  // 4. Call Claude with longer output\n  const response = await this.anthropic.messages.create({\n    model: 'claude-sonnet-4-20250514',\n    max_tokens: 4096,\n    messages: [{ role: 'user', content: prompt }],\n  });\n  \n  return parseDocumentWithCitations(response.content, retrieved);\n}\n```\n\nDefine `DraftedDocument` type with `content: string`, `citations: Citation[]`. The `parseDocumentWithCitations` function should match inline references to retrieved chunks and build citation array. Add `buildDocumentPrompt` to prompts.ts that includes template structure, solution context, and citation instructions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test buildDocumentPrompt includes template and all context. Test parseDocumentWithCitations extracts citations matching retrieved chunks. Integration test: draft document for test solution with known context, verify output includes relevant content and valid citations linking back to sources.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:09.791Z"
           },
           {
             "id": 4,
@@ -1401,9 +1404,10 @@
               2
             ],
             "details": "Add streaming method to CustomerAgent:\n\n```typescript\nasync *streamSuggestions(context: SuggestionContext): AsyncGenerator<Suggestion> {\n  const retrieved = await retrieveContext(this.customerDb, context.recentTranscript, {\n    limit: 10,\n    threshold: 0.7,\n  });\n  \n  const prompt = buildSuggestionPrompt(context, retrieved);\n  \n  const stream = this.anthropic.messages.stream({\n    model: 'claude-sonnet-4-20250514',\n    max_tokens: 1024,\n    messages: [{ role: 'user', content: prompt }],\n  });\n  \n  let buffer = '';\n  for await (const event of stream) {\n    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {\n      buffer += event.delta.text;\n      // Parse complete suggestions from buffer\n      const parsed = extractCompleteSuggestions(buffer);\n      for (const suggestion of parsed.complete) {\n        yield suggestion;\n      }\n      buffer = parsed.remaining;\n    }\n  }\n  // Yield any remaining suggestions\n  if (buffer.trim()) {\n    yield* parseFinalSuggestions(buffer);\n  }\n}\n```\n\nCreate `extractCompleteSuggestions(buffer: string)` in parsers.ts that detects complete suggestion blocks (JSON objects or numbered items) and returns them while preserving incomplete data in remaining buffer.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test extractCompleteSuggestions with partial and complete suggestion text. Integration test: call streamSuggestions and collect yielded suggestions, verify they arrive incrementally. Test that partial responses don't emit incomplete suggestions. Verify all suggestions eventually emitted match non-streaming version.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:11.580Z"
           },
           {
             "id": 5,
@@ -1413,9 +1417,10 @@
               1
             ],
             "details": "Add to `src/db/customer/schema/agent_config.ts` (if not already created by Task 3):\n\n```typescript\nexport const agentConfig = pgTable('agent_config', {\n  id: uuid('id').defaultRandom().primaryKey(),\n  systemPromptOverride: text('system_prompt_override'),\n  temperature: real('temperature').default(0.7),\n  modelOverride: text('model_override'),\n  suggestionCount: integer('suggestion_count').default(5),\n  retrievalLimit: integer('retrieval_limit').default(10),\n  updatedAt: timestamp('updated_at').defaultNow().notNull(),\n});\n```\n\nCreate `src/lib/agent/config.ts`:\n\n```typescript\nexport async function loadAgentConfig(customerDb: CustomerDb): Promise<AgentConfig> {\n  const config = await customerDb.query.agentConfig.findFirst();\n  return config ?? DEFAULT_AGENT_CONFIG;\n}\n\nexport async function saveAgentConfig(customerDb: CustomerDb, config: Partial<AgentConfig>): Promise<void> {\n  await customerDb.insert(agentConfig).values(config)\n    .onConflictDoUpdate({ target: agentConfig.id, set: config });\n}\n```\n\nModify CustomerAgent to load config in constructor (or lazily) and use temperature/model from config in API calls. Export DEFAULT_AGENT_CONFIG with sensible defaults.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify schema compiles and migration generates. Test loadAgentConfig returns defaults when no config exists. Test saveAgentConfig creates/updates record. Test CustomerAgent uses loaded config values for temperature and model in Anthropic calls.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:13.445Z"
           },
           {
             "id": 6,
@@ -1426,14 +1431,16 @@
               5
             ],
             "details": "Add to `src/db/customer/schema/agent_memory.ts` (if not already created):\n\n```typescript\nexport const agentMemory = pgTable('agent_memory', {\n  id: uuid('id').defaultRandom().primaryKey(),\n  sessionId: text('session_id').notNull(),\n  role: text('role', { enum: ['user', 'assistant'] }).notNull(),\n  content: text('content').notNull(),\n  sequence: integer('sequence').notNull(),\n  createdAt: timestamp('created_at').defaultNow().notNull(),\n});\n```\n\nCreate `src/lib/agent/memory.ts`:\n\n```typescript\nexport class AgentMemory {\n  constructor(private customerDb: CustomerDb, private sessionId: string) {}\n  \n  async getHistory(): Promise<Message[]> {\n    return this.customerDb.select().from(agentMemory)\n      .where(eq(agentMemory.sessionId, this.sessionId))\n      .orderBy(asc(agentMemory.sequence));\n  }\n  \n  async addMessage(role: 'user' | 'assistant', content: string): Promise<void> {\n    const nextSeq = await this.getNextSequence();\n    await this.customerDb.insert(agentMemory).values({\n      sessionId: this.sessionId, role, content, sequence: nextSeq\n    });\n  }\n  \n  async clearSession(): Promise<void> {\n    await this.customerDb.delete(agentMemory)\n      .where(eq(agentMemory.sessionId, this.sessionId));\n  }\n}\n```\n\nIntegrate memory into CustomerAgent: add optional sessionId parameter to generateSuggestions, include message history in prompts when sessionId provided. Session IDs are typically call IDs for live call context.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test AgentMemory stores and retrieves messages in correct order. Test sequence numbers increment properly. Test clearSession removes all session messages. Integration test: simulate multi-turn conversation, verify history is included in subsequent prompts. Test session isolation - different sessionIds don't see each other's messages.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:15.344Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Install Anthropic SDK and create agent class, 2) Suggestion generation with retrieval integration, 3) Document drafting method, 4) Streaming suggestion generation, 5) Agent config schema and loading, 6) Agent memory management. Ensure retrieval is scoped to customer database only."
+        "expansionPrompt": "Break down into: 1) Install Anthropic SDK and create agent class, 2) Suggestion generation with retrieval integration, 3) Document drafting method, 4) Streaming suggestion generation, 5) Agent config schema and loading, 6) Agent memory management. Ensure retrieval is scoped to customer database only.",
+        "updatedAt": "2026-11-14T17:11:15.344Z"
       },
       {
         "id": "18",
@@ -2370,7 +2377,7 @@
           "5",
           "9"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2430,15 +2437,16 @@
               4
             ],
             "details": "Create `tests/isolation/agent-scope.test.ts`. Tests: 1) `it('should scope agent retrieval to customer database only')` - create CustomerAgent for customerA, run `agent.retrieveContext('test query')`, verify all results have `customerId === customerA.id`. 2) `it('should not retrieve embeddings from other customer databases')` - add similar embeddings to both customers, query one customer's agent, verify no cross-contamination. 3) `it('should not include other customer context in agent prompts')` - if agent prompt construction is testable, verify it only includes customerA's data. Create `.github/workflows/test.yml` (or add to existing CI config): run `npm run test` with a PostgreSQL service container, set `DATABASE_URL` for the test runner, ensure test databases are created with proper permissions. Add `afterAll` cleanup in global setup to drop all `robin_test_*` databases. Document in tests/README.md how to run isolation tests locally and what environment variables are needed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run full isolation test suite locally, verify all tests pass. Intentionally break isolation (e.g., remove customer ID filter in a query) and verify tests catch it. Trigger CI pipeline and verify tests run and pass in the CI environment.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:11:18.926Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
         "expansionPrompt": "Break down into: 1) Test infrastructure with Vitest and test users/customers, 2) Direct resolver access denial tests, 3) Query isolation tests via resolver, 4) API endpoint authorization tests, 5) Agent retrieval scope tests. Intentionally try to break isolation to verify protection.",
-        "updatedAt": "2026-11-14T16:52:27.053Z"
+        "updatedAt": "2026-11-14T17:11:18.926Z"
       },
       {
         "id": "31",
@@ -2460,9 +2468,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T17:07:53.774Z",
+      "lastModified": "2026-11-14T17:11:18.926Z",
       "taskCount": 31,
-      "completedCount": 21,
+      "completedCount": 23,
       "tags": [
         "master"
       ]

@@ -400,6 +400,12 @@ prompted it.
   no data leaves the server) behind an `EmbeddingProvider` interface, because the provider
   (open question 4) is undecided. Retrieval quality is not representative until a real
   model is plugged in; chunks record their model, so switching re-embeds on the next sync.
+- 2026-11-14 — Customer agent service built on the Anthropic SDK (`claude-opus-5-5` by
+  default, overridable per customer; refused requests fall back to Anthropic's default
+  fallback model). It suggests questions from the recent transcript and drafts documents
+  with source citations, using only that customer's retrieved context. **Not yet run
+  against the real API** (no key configured; calls cost money) — tested with a fake model
+  client. Suggestions arrive as one structured answer; only document drafts stream.
 
 </PRD>
 

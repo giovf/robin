@@ -374,6 +374,10 @@ prompted it.
   single-user, sign-up closes once the first account exists (`ALLOW_SIGNUP=true` reopens
   it). First sign-up creates the user's organisation. Google sign-in can be added later
   through the same library.
+- 2026-11-14 — Provisional life-cycle phase list (open question 7), used by the hub until
+  the real list is agreed: Discovery, Solution design, Proposal, Delivery, Handover,
+  Operations. Phases are stored as text, so changing the list needs no migration. Archived
+  customers are hidden and inaccessible in the hub (data kept).
 
 </PRD>
 

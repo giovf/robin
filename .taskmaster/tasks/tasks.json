@@ -662,7 +662,7 @@
           "5",
           "7"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -670,9 +670,10 @@
             "description": "Build the main customers listing page at src/app/(hub)/customers/page.tsx that fetches and displays all customers for the authenticated user, including the NewCustomerButton component.",
             "dependencies": [],
             "details": "Create the (hub) route group and customers page as a Server Component. Implement getCustomersForUser() data fetching function that queries the control-plane database, joining customers with memberships to filter by user's organization. Build CustomerList component displaying customer name, status, created date with links to detail pages. Add NewCustomerButton linking to /customers/new. Include empty state for users with no customers. Ensure the page uses requireAuth() from the auth utilities (task 7 dependency).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify page renders with mock customer data. Test empty state displays correctly. Verify only customers from user's organization are shown. Test navigation to detail pages and new customer form.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:46.783Z"
           },
           {
             "id": 2,
@@ -682,9 +683,10 @@
               1
             ],
             "details": "Create src/app/(hub)/customers/new/page.tsx with a form collecting customer name and optional description. Implement createCustomer server action in src/app/(hub)/customers/actions.ts that: 1) validates user session, 2) inserts customer record into control-plane database linked to user's organization, 3) calls provisionCustomerDatabase() from task 4 to create the customer's isolated database, 4) returns the new customer ID. Use React Server Actions with proper form validation. Handle provisioning failures gracefully with rollback of the customer record. Redirect to customer detail page on success.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test form submission creates customer record. Verify database provisioning is triggered. Test validation errors display correctly. Verify redirect to new customer's detail page. Test rollback if provisioning fails.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:48.438Z"
           },
           {
             "id": 3,
@@ -694,9 +696,10 @@
               1
             ],
             "details": "Create dynamic route src/app/(hub)/customers/[customerId]/page.tsx as a Server Component. Use getCustomerConnection resolver (task 5 dependency) to verify user access and fetch customer data. Implement tab navigation using either URL-based tabs (parallel routes or query params) or client-side state. Overview tab shows customer name, status, created date, and database status. Solutions tab lists solutions from customer database (placeholder until solutions CRUD exists). Context Sources tab shows connected integrations (placeholder). Settings tab shows customer configuration options. Include breadcrumb navigation back to customer list.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify page loads customer details correctly. Test tab switching works. Verify access denied for customers not in user's organization. Test 404 for non-existent customers. Verify breadcrumb navigation.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:50.159Z"
           },
           {
             "id": 4,
@@ -706,9 +709,10 @@
               3
             ],
             "details": "Create updateCustomer server action in src/app/(hub)/customers/actions.ts that validates ownership via membership check before updating. Implement either inline editing on the Overview tab with optimistic updates, or a modal edit form triggered by an Edit button. Support editing customer name and description. Add client-side form validation. Use useOptimistic or revalidatePath for immediate UI feedback. Ensure edit action checks user has access through organization membership before allowing changes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test editing customer name persists to database. Verify validation errors display. Test optimistic update shows immediately. Verify unauthorized users cannot edit. Test concurrent edit handling.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:52.070Z"
           },
           {
             "id": 5,
@@ -719,14 +723,16 @@
               4
             ],
             "details": "Create archiveCustomer server action in src/app/(hub)/customers/actions.ts that sets customer status to 'archived' in control-plane database after verifying ownership. Add Archive button to customer detail page Settings tab or header. Implement confirmation dialog (client component) warning about archiving consequences. Optionally show archived customers in a separate filtered view or with visual distinction. Update customer list query to exclude archived customers by default. Add filter toggle to show/hide archived customers. Ensure archived customer detail pages show archived status and restrict certain actions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test archive action marks customer as archived. Verify confirmation dialog appears before archiving. Test archived customers hidden from main list. Verify direct URL access shows archived status. Test filter toggle to show archived customers.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:53.742Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Customer list page with data fetching, 2) New customer form with server action triggering provisioning, 3) Customer detail page with tabs, 4) Edit customer functionality, 5) Archive customer action with confirmation. Ensure provisioning is called on create."
+        "expansionPrompt": "Break down into: 1) Customer list page with data fetching, 2) New customer form with server action triggering provisioning, 3) Customer detail page with tabs, 4) Edit customer functionality, 5) Archive customer action with confirmation. Ensure provisioning is called on create.",
+        "updatedAt": "2026-11-14T16:46:53.742Z"
       },
       {
         "id": "9",
@@ -739,7 +745,7 @@
           "5",
           "8"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -747,9 +753,10 @@
             "description": "Create the solutions list page at src/app/(hub)/customers/[customerId]/solutions/page.tsx that fetches and displays all solutions for a customer using the customer connection resolver",
             "dependencies": [],
             "details": "Create the solutions list page that uses getCustomerConnection() to obtain a database connection scoped to the authenticated user and customer ID. Fetch all solutions from the customer's database and render them using a SolutionList component. Include a NewSolutionButton for creating new solutions. The page must verify customer ownership through the resolver before any database access. Implement proper loading and error states. Create the page as a Server Component with async data fetching.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify page loads solutions only for the authenticated user's customer. Test that accessing a customer without membership returns 403. Test empty state when no solutions exist. Test that solutions from other customers are never visible.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:57.170Z"
           },
           {
             "id": 2,
@@ -759,9 +766,10 @@
               1
             ],
             "details": "Implement server actions: createSolution(), updateSolution(), and archiveSolution(). Each action must use getCustomerConnection() with the authenticated user ID and customer ID to enforce isolation. createSolution takes name, description, and initial phase (defaulting to 'discovery'). updateSolution allows editing name, description, and phase. archiveSolution sets status to 'archived'. All actions return the updated solution and handle validation errors. Use Zod for input validation. Mark all functions with 'use server' directive.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test creating a solution and verifying it appears in the customer's database. Test that creating a solution for a non-owned customer fails. Test updating solution fields persists correctly. Test archiving sets the correct status and the solution no longer appears in active lists.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:46:58.893Z"
           },
           {
             "id": 3,
@@ -771,9 +779,10 @@
               1
             ],
             "details": "Create the solution detail page using the customer connection resolver to fetch the specific solution by ID. Implement a tabbed interface with four tabs: Overview (solution name, description, phase, status, creation date), Calls (placeholder list of call sessions), Documents (placeholder document list), and Diagrams (placeholder diagram list). Use URL-based tab switching with searchParams or nested routes. Include an edit button that opens an edit modal or navigates to an edit page. Ensure the solution belongs to the correct customer by verifying the customerId parameter matches.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test page loads correct solution details. Test that accessing a solution ID from a different customer returns 404 or 403. Test tab navigation works correctly and preserves state. Test that archived solutions can still be viewed but show archived status prominently.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:47:00.850Z"
           },
           {
             "id": 4,
@@ -783,9 +792,10 @@
               2
             ],
             "details": "Create src/components/solutions/PhaseSelector.tsx that displays the current phase as a visual indicator (e.g., stepper or dropdown). Support the phases defined in the schema: discovery, going_ahead, and subsequent lifecycle phases. Include an 'Advance Phase' action that calls the updateSolution server action with the next phase. Show visual distinction for the current phase. Disable backward navigation unless explicitly allowed. The component should be client-side ('use client') for interactivity. Include confirmation before advancing phases as this triggers documentation generation in later features.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test phase indicator displays correct current phase. Test advancing to next phase updates the solution. Test that phase changes persist after page reload. Test UI prevents invalid phase transitions.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:47:02.624Z"
           },
           {
             "id": 5,
@@ -795,14 +805,16 @@
               1
             ],
             "details": "Create src/components/solutions/SolutionCard.tsx that renders a card with solution name, description (truncated), current phase badge, status indicator, and last activity timestamp. Include a link to the solution detail page. Show visual distinction for archived solutions (greyed out or with archive badge). Add hover state and accessible focus styling. The card should handle click navigation to the solution detail page. Include a quick-actions menu (three dots) with Edit and Archive options that trigger the respective server actions. Make the component responsive for both grid and list layouts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test card renders all solution fields correctly. Test clicking navigates to solution detail page. Test archived solutions show distinct styling. Test quick actions menu triggers correct server actions. Test accessibility with keyboard navigation.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:47:04.330Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Solutions list page using customer connection resolver, 2) Create solution server action, 3) Solution detail page with Overview/Calls/Documents/Diagrams tabs, 4) Phase selector component, 5) Solution card component for list view. Verify customer isolation in all queries."
+        "expansionPrompt": "Break down into: 1) Solutions list page using customer connection resolver, 2) Create solution server action, 3) Solution detail page with Overview/Calls/Documents/Diagrams tabs, 4) Phase selector component, 5) Solution card component for list view. Verify customer isolation in all queries.",
+        "updatedAt": "2026-11-14T16:47:04.330Z"
       },
       {
         "id": "10",
@@ -2381,9 +2393,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T16:42:26.371Z",
+      "lastModified": "2026-11-14T16:47:04.331Z",
       "taskCount": 31,
-      "completedCount": 8,
+      "completedCount": 10,
       "tags": [
         "master"
       ]

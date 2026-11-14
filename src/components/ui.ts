@@ -11,3 +11,8 @@ export const secondaryButtonClass =
   "border-line bg-surface text-ink hover:bg-sunken rounded-control inline-flex items-center justify-center border px-4 py-2 text-sm font-medium transition-colors";
 
 export const cardClass = "border-line bg-surface rounded-card border";
+
+export const dangerButtonClass =
+  "border-danger text-danger hover:bg-danger-soft rounded-control inline-flex items-center justify-center border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+
+export const linkClass = "text-accent font-medium underline";

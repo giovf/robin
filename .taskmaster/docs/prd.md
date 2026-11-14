@@ -392,6 +392,14 @@ prompted it.
   It connects with read-only scopes; the write scopes needed for publishing
   (`write:confluence-content`, `write:jira-work`) are requested only when publishing is
   built, so a connection made today cannot write to the customer's systems.
+- 2026-11-14 — Context ingestion built: file upload (PDF, DOCX, text, Markdown, CSV, JSON,
+  HTML; 20 MB limit; libraries `unpdf` and `mammoth`), chunking (~2000 characters with
+  overlap), manual sync of selected integration sources (changed items only; items deleted
+  at the provider are not yet removed), retrieval, and a Knowledge page with search.
+  **Embeddings are a local stand-in** (`local-hash-v1`: word hashing, no meaning, no cost,
+  no data leaves the server) behind an `EmbeddingProvider` interface, because the provider
+  (open question 4) is undecided. Retrieval quality is not representative until a real
+  model is plugged in; chunks record their model, so switching re-embeds on the next sync.
 
 </PRD>
 

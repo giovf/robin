@@ -28,6 +28,7 @@ export default async function CustomerLayout({
             { href: base, label: "Overview" },
             { href: `${base}/solutions`, label: "Solutions" },
             { href: `${base}/sources`, label: "Context sources" },
+            { href: `${base}/knowledge`, label: "Knowledge" },
             { href: `${base}/settings`, label: "Settings" },
           ]}
         />

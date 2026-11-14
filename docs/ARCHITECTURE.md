@@ -38,6 +38,10 @@ ownership are in the data model from day one, even though v1 is single-user.
 - `src/components/` — shared UI; design tokens in `src/app/globals.css`
 - `src/lib/integrations/` — the adapter interface (`types.ts`), registry,
   encrypted connection storage and a fake adapter for tests
+- `src/lib/ingestion/` — `ingestItem` (chunk + embed + store), file upload and
+  integration sync; `src/lib/retrieval.ts` — similarity search within one
+  customer; `src/lib/embeddings.ts` — the `EmbeddingProvider` interface (only
+  a local hashing stand-in exists until a provider is chosen)
 - `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
   pages and server actions call; actions stay thin
 - `src/test/` — Vitest global setup, fixtures and the customer-isolation suite

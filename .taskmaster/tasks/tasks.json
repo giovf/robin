@@ -1197,7 +1197,7 @@
           "3",
           "5"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1205,9 +1205,10 @@
             "description": "Implement the POST route handler at src/app/(hub)/customers/[customerId]/upload/route.ts that accepts multipart form data, validates file types, and orchestrates the upload pipeline.",
             "dependencies": [],
             "details": "Create the route handler with these responsibilities:\n\n1. Set up the route at `src/app/(hub)/customers/[customerId]/upload/route.ts`\n2. Parse multipart form data using Next.js built-in `request.formData()`\n3. Validate file presence and supported file types (PDF, DOCX, TXT, MD)\n4. Validate file size limits (suggest 10MB max initially)\n5. Call `requireAuth()` to verify user session\n6. Call `getCustomerConnection()` to get customer database connection\n7. Coordinate the pipeline: extract text → chunk → embed → store\n8. Return appropriate JSON response with source item details or error\n9. Handle errors gracefully with proper HTTP status codes\n\nExport typed request/response interfaces. Use streaming for large file handling if needed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test with curl/Postman: valid PDF upload returns 200 with source item ID, invalid file type returns 400, missing file returns 400, unauthorized request returns 401, file too large returns 413.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:15.273Z"
           },
           {
             "id": 2,
@@ -1217,9 +1218,10 @@
               1
             ],
             "details": "Create text extraction module:\n\n1. Install dependencies: `npm install pdf-parse@latest mammoth@latest`\n2. Create `src/lib/text-extraction.ts` with:\n   - `extractText(file: File): Promise<string>` - main entry point that routes by MIME type\n   - `extractFromPdf(buffer: Buffer): Promise<string>` - uses pdf-parse\n   - `extractFromDocx(buffer: Buffer): Promise<string>` - uses mammoth\n   - `extractFromText(buffer: Buffer): string` - UTF-8 decode\n   - `extractFromMarkdown(buffer: Buffer): string` - UTF-8 decode, strip YAML frontmatter\n3. Handle extraction errors gracefully (corrupted files, password-protected PDFs)\n4. Normalize whitespace and remove excessive blank lines\n5. Define supported MIME types constant: `SUPPORTED_MIME_TYPES`\n6. Export `isSupportedFileType(mimeType: string): boolean` helper\n\nAll functions should have explicit return types.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests: extract text from sample PDF, DOCX, TXT, MD files; verify corrupted file throws descriptive error; verify password-protected PDF throws specific error; verify whitespace normalization.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:17.090Z"
           },
           {
             "id": 3,
@@ -1227,9 +1229,10 @@
             "description": "Create src/lib/chunking.ts with a chunking algorithm that respects token limits, maintains semantic boundaries, and includes configurable overlap.",
             "dependencies": [],
             "details": "Create chunking module:\n\n1. Install tokenizer: `npm install tiktoken@latest` (or use simple word-based estimation)\n2. Create `src/lib/chunking.ts` with:\n   - `ChunkOptions` interface: `{ maxTokens: number; overlap: number; separator?: 'paragraph' | 'sentence' }`\n   - `Chunk` interface: `{ text: string; startIndex: number; endIndex: number; tokenCount: number }`\n   - `chunkText(text: string, options: ChunkOptions): Chunk[]`\n3. Chunking algorithm:\n   - Split by paragraphs first (double newline)\n   - If paragraph exceeds maxTokens, split by sentences\n   - If sentence exceeds maxTokens, split by words with hard cut\n   - Include overlap tokens from previous chunk for context continuity\n4. Default options: `maxTokens: 512, overlap: 50`\n5. Count tokens accurately or use ~4 chars/token estimation\n6. Preserve chunk boundaries for source attribution\n\nHandle edge cases: empty text, single very long word, text shorter than overlap.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests: chunk long text produces multiple chunks; chunks respect maxTokens limit; overlap tokens appear at chunk start; empty text returns empty array; single paragraph under limit returns one chunk.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:18.878Z"
           },
           {
             "id": 4,
@@ -1237,9 +1240,10 @@
             "description": "Create src/lib/embeddings.ts with a placeholder embedding function and provider interface to support future integration with OpenAI, Voyage, Cohere, or other embedding APIs.",
             "dependencies": [],
             "details": "Create embeddings module with provider abstraction:\n\n1. Create `src/lib/embeddings.ts` with:\n   - `EmbeddingProvider` interface: `{ generateEmbedding(text: string): Promise<number[]>; dimensions: number; model: string }`\n   - `generateEmbedding(text: string): Promise<number[]>` - main entry using configured provider\n   - `EMBEDDING_DIMENSIONS` constant (1536 for OpenAI ada-002 compatibility)\n2. Placeholder implementation:\n   - Return zero vector of correct dimensions for now\n   - Log warning that placeholder is in use\n   - Mark with TODO for real implementation\n3. Provider factory pattern for easy swapping:\n   - `createOpenAIProvider(apiKey: string): EmbeddingProvider`\n   - `createVoyageProvider(apiKey: string): EmbeddingProvider` (stub)\n4. Environment variable: `EMBEDDING_PROVIDER` to select provider\n5. Batch support interface for efficiency: `generateEmbeddings(texts: string[]): Promise<number[][]>`\n\nThis is explicitly a placeholder per PRD - real provider selection is an open question.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test placeholder returns array of correct dimensions (1536); test provider interface can be mocked; test batch function handles multiple inputs; test warning logged when using placeholder.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:20.778Z"
           },
           {
             "id": 5,
@@ -1252,9 +1256,10 @@
               4
             ],
             "details": "Implement storage layer (assumes customer schema from Task 5):\n\n1. Create `src/lib/storage/source-items.ts` with:\n   - `createSourceItem(db, { provider, title, contentHash, metadata }): Promise<SourceItem>`\n   - `getSourceItemByHash(db, contentHash): Promise<SourceItem | null>` (deduplication)\n   - `deleteSourceItem(db, id): Promise<void>` (cascades to chunks)\n2. Create `src/lib/storage/chunks.ts` with:\n   - `storeChunks(db, sourceItemId, chunks: ChunkWithEmbedding[]): Promise<void>`\n   - `ChunkWithEmbedding`: extends Chunk with `embedding: number[]`\n   - Use batch insert for efficiency\n3. Create `src/lib/utils/hash.ts` with:\n   - `hashContent(text: string): string` - SHA-256 hash for deduplication\n4. Transaction wrapper to ensure atomicity:\n   - If embedding fails mid-way, rollback source item creation\n5. Update route handler to use these storage functions\n6. Handle duplicate uploads (same content hash) gracefully - update or skip\n\nUse Drizzle ORM patterns consistent with the project.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests: store source item and verify in DB; store chunks with embeddings and verify; duplicate hash returns existing item or updates; deletion cascades to chunks; transaction rollback on failure.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:22.613Z"
           },
           {
             "id": 6,
@@ -1264,14 +1269,16 @@
               1
             ],
             "details": "Create upload UI component:\n\n1. Create `src/components/file-upload.tsx` with:\n   - `FileUpload` component with drag-and-drop zone\n   - Props: `customerId: string; onUploadComplete?: (sourceItem) => void; onError?: (error) => void`\n2. Features:\n   - Drag-and-drop area with visual feedback (border change on dragover)\n   - Click to open file picker as fallback\n   - File type validation before upload (PDF, DOCX, TXT, MD)\n   - File size validation (10MB max)\n   - Upload progress bar using fetch with ReadableStream or XMLHttpRequest\n   - Success/error states with appropriate messaging\n   - Multiple file support (queue uploads sequentially)\n3. Use 'use client' directive for interactivity\n4. Style with Tailwind CSS, respect design tokens from globals.css\n5. Accessible: keyboard navigation, ARIA labels, screen reader announcements\n6. Show uploaded file name and type icon\n\nKeep component focused - no routing or page-level concerns.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manual testing: drag PDF file shows upload progress and success; drop invalid file type shows error; click to select file works; progress bar updates during upload; keyboard accessible; error state displays API error message.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:24.442Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) File upload route handler, 2) Text extraction for different file types (PDF, DOCX, TXT, MD), 3) Chunking utility with token limits and overlap, 4) Embedding generation placeholder, 5) Store source item and chunks in customer DB, 6) Upload UI with drag-and-drop. Handle large files appropriately."
+        "expansionPrompt": "Break down into: 1) File upload route handler, 2) Text extraction for different file types (PDF, DOCX, TXT, MD), 3) Chunking utility with token limits and overlap, 4) Embedding generation placeholder, 5) Store source item and chunks in customer DB, 6) Upload UI with drag-and-drop. Handle large files appropriately.",
+        "updatedAt": "2026-11-14T17:07:24.442Z"
       },
       {
         "id": "16",
@@ -1283,7 +1290,7 @@
         "dependencies": [
           "15"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1291,9 +1298,10 @@
             "description": "Create the core vector similarity search function using pgvector's cosine distance operator (<=>), implementing the SQL template syntax with Drizzle ORM for type-safe similarity calculations.",
             "dependencies": [],
             "details": "Create `src/lib/retrieval.ts` with the core similarity search implementation:\n\n1. Import required modules: `sql` from drizzle-orm, chunks/sourceItems schemas from customer schema, generateEmbedding from embeddings module\n2. Define types: `RetrievalResult = { chunk: Chunk; sourceItem: SourceItem; similarity: number }`\n3. Implement vector embedding conversion for query input using the existing generateEmbedding function\n4. Build the pgvector cosine similarity query using Drizzle's `sql` template literal:\n   - Cosine similarity formula: `1 - (embedding <=> query_embedding)` gives similarity (1 = identical, 0 = orthogonal)\n   - The `<=>` operator is pgvector's cosine distance operator\n5. Handle the embedding array format for Postgres vector type (must be formatted as `[0.1,0.2,...]` string)\n6. Add error handling for empty embeddings or database connection issues\n7. Export explicit return types following project conventions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests: verify SQL template generates valid pgvector syntax; verify embedding array formats correctly for Postgres; test with mock database that similarity calculation returns values between 0 and 1; test error handling for null embeddings.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:28.042Z"
           },
           {
             "id": 2,
@@ -1303,9 +1311,10 @@
               1
             ],
             "details": "Extend `src/lib/retrieval.ts` with the full retrieval function:\n\n1. Define `RetrievalOptions` interface: `{ limit?: number; threshold?: number }` with defaults `limit=10, threshold=0.7`\n2. Implement `retrieveContext(customerDb, query, options)` function:\n   - Generate query embedding using generateEmbedding(query)\n   - Build Drizzle query selecting chunk, sourceItem, and computed similarity\n   - Inner join chunks with sourceItems on sourceItemId\n   - WHERE clause: filter by similarity > threshold using sql template\n   - ORDER BY: ascending cosine distance (smaller distance = more similar)\n   - LIMIT: apply the limit option\n3. Handle edge cases: empty query string, no results found, threshold out of range\n4. Return empty array for no matches rather than null\n5. Log query performance metrics (time taken, results count) for benchmarking\n6. Ensure customerDb type safety using the CustomerDb type from customer connection module",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests with test database: insert known chunks with embeddings; query with semantically related text and verify correct chunks returned; verify threshold filters out low-similarity results; verify limit caps results; benchmark query time with 100+ chunks.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:29.829Z"
           },
           {
             "id": 3,
@@ -1316,9 +1325,10 @@
               2
             ],
             "details": "Add filtered retrieval to `src/lib/retrieval.ts`:\n\n1. Define `DateRange` type: `{ start?: Date; end?: Date }`\n2. Implement `retrieveFromSources(customerDb, query, sourceTypes?, dateRange?, options?)` function:\n   - Extend base retrieveContext query with additional WHERE conditions\n   - Source type filter: `AND sourceItems.provider IN (sourceTypes)` when sourceTypes provided\n   - Date range filter: `AND sourceItems.syncedAt >= start AND sourceItems.syncedAt <= end`\n   - Combine with existing similarity threshold condition\n3. Handle optional filters gracefully - only add WHERE clauses when parameters provided\n4. Use Drizzle's `inArray` helper for source types, sql template for date comparisons\n5. Ensure filters don't override the similarity ordering (still order by relevance)\n6. Consider adding sourceType to RetrievalResult for caller convenience\n7. Export both functions and all related types\n\nFilters enable queries like: \"Find relevant context from Gmail only\" or \"Find context from last 30 days\"",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration tests: insert chunks from multiple providers (gmail, drive, upload); query with sourceTypes=['gmail'] and verify only gmail chunks returned; insert chunks with various syncedAt dates; query with dateRange and verify time-bounded results; verify combined filters work correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:31.683Z"
           },
           {
             "id": 4,
@@ -1326,14 +1336,16 @@
             "description": "Add a Drizzle migration that creates the IVFFlat index on the chunks.embedding column with vector_cosine_ops for optimized similarity queries, including index tuning parameters.",
             "dependencies": [],
             "details": "Create the pgvector index migration for the customer database schema:\n\n1. Create a new migration file for customer database (follows Drizzle customer migration pattern from Task 1)\n2. Add SQL migration to create IVFFlat index:\n   ```sql\n   CREATE INDEX IF NOT EXISTS chunks_embedding_idx ON chunks \n   USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);\n   ```\n3. IVFFlat parameters explained:\n   - `lists = 100`: Creates 100 inverted lists (clusters) for approximate search\n   - Suitable for datasets up to ~100k vectors; increase for larger datasets\n   - Trade-off: more lists = slower index build, faster queries\n4. Add migration down (rollback): `DROP INDEX IF EXISTS chunks_embedding_idx;`\n5. Document index maintenance requirements:\n   - Index should be rebuilt after significant data changes (REINDEX)\n   - Consider HNSW index for better recall vs IVFFlat trade-offs\n6. Update customer provisioning to apply this migration on database creation\n7. Add EXPLAIN ANALYZE helper function for query plan verification",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Apply migration to test customer database; verify index exists with `\\d chunks`; run EXPLAIN ANALYZE on similarity query and verify index scan used (not sequential scan); benchmark query with 1000+ chunks before/after index - expect 10x+ speedup; test migration rollback successfully drops index.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:33.475Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Vector similarity query using pgvector operators, 2) Retrieval function with limit and threshold options, 3) Filtered retrieval by source type and date range, 4) Create vector index for performance. Benchmark query performance."
+        "expansionPrompt": "Break down into: 1) Vector similarity query using pgvector operators, 2) Retrieval function with limit and threshold options, 3) Filtered retrieval by source type and date range, 4) Create vector index for performance. Benchmark query performance.",
+        "updatedAt": "2026-11-14T17:07:33.475Z"
       },
       {
         "id": "17",
@@ -2047,7 +2059,7 @@
           "15",
           "25"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2055,9 +2067,10 @@
             "description": "Create the core sync orchestrator in `src/lib/ingestion/pipeline.ts` that coordinates fetching content from integration adapters, handles pagination tokens, and manages the overall sync flow for a customer source.",
             "dependencies": [],
             "details": "Implement `syncCustomerSource(sourceId: string)` as the main entry point. Fetch the source config and integration tokens via the customer-connection resolver. Use `getAdapter(provider)` to obtain the correct integration adapter (Google Drive, Gmail, Confluence, Jira). Implement pagination loop using `nextPageToken` pattern common across OAuth APIs. Track items processed count. Handle API rate limits with exponential backoff and retry logic (start with 3 retries, 1s/2s/4s delays). Return `SyncResult` with `itemsProcessed`, `errors`, and `status`. Ensure all database access goes through the customer-scoped connection only.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test pagination loop with mocked adapter returning 3 pages. Test rate limit retry by simulating 429 responses. Integration test with fake adapter returning known items. Verify customer isolation by checking DB connection source.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:37.100Z"
           },
           {
             "id": 2,
@@ -2067,9 +2080,10 @@
               1
             ],
             "details": "Define `NormalizedContent` type with fields: `text`, `title`, `sourceType`, `sourceUrl`, `author`, `createdAt`, `updatedAt`, `metadata`. Implement `normalizeContent(item: RawSourceItem): NormalizedContent` that handles: Gmail (extract body, strip HTML, handle threads), Drive (extract text from docs/sheets/pdfs via content type), Confluence (strip wiki markup, preserve structure), Jira (combine summary, description, comments). Implement `chunkText(text: string): TextChunk[]` using semantic chunking with ~500 token chunks and 50 token overlap. Each chunk includes position metadata for citation. Generate content hash (SHA-256 of normalized text) for deduplication.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test each provider normalizer with sample raw content. Test chunking produces expected chunk count and overlap. Verify content hash is deterministic. Test HTML stripping doesn't lose meaningful content.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:38.897Z"
           },
           {
             "id": 3,
@@ -2080,9 +2094,10 @@
               2
             ],
             "details": "Add `contentHash` column to source items table if not present. In sync loop: before processing each item, query `findSourceItemByHash(sourceId, externalId)` to get existing record. Compare stored `contentHash` with newly computed hash. If match, skip embedding/storage. If different, delete old chunks via `deleteChunksForSourceItem(sourceItemId)` before creating new ones. Track skip count in `SyncResult`. For items that no longer exist in source, implement soft-delete or mark as stale (configurable). Store `lastSyncedAt` timestamp per source item.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that unchanged content is skipped (mock adapter returns same item twice). Test that modified content triggers re-embedding. Test deletion of old chunks when content changes. Verify hash comparison is efficient (indexed query).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:40.716Z"
           },
           {
             "id": 4,
@@ -2092,9 +2107,10 @@
               1
             ],
             "details": "Extend customer sources schema with: `lastSyncedAt: timestamp`, `lastSyncStatus: enum('idle', 'syncing', 'completed', 'error')`, `lastSyncItemCount: integer`, `lastSyncError: text`, `syncProgress: jsonb` (for current page/total if available). Create `updateSyncStatus(sourceId, status)` helper. At sync start: set status to 'syncing', clear previous error. During sync: update progress periodically (every 10 items or every page). On success: set 'completed', update counts and timestamp. On failure: set 'error', store error message and stack. Add `getSyncStatus(sourceId)` for UI polling. Implement sync lock to prevent concurrent syncs of same source.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test status transitions through full sync lifecycle. Test concurrent sync prevention with lock. Test error state is properly captured and retrievable. Test progress updates are persisted.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:42.548Z"
           },
           {
             "id": 5,
@@ -2105,14 +2121,16 @@
               4
             ],
             "details": "Create `src/app/api/sources/[sourceId]/sync/route.ts` with POST handler. Verify user has access to the source's customer. Check sync lock to prevent duplicate runs. Respond immediately with `{ status: 'started', syncId }` using fire-and-forget pattern (`syncCustomerSource(sourceId).catch(logError)`). Create `SyncButton` component in `src/components/sources/SyncButton.tsx` with loading state, polling for status via `GET /api/sources/[sourceId]/sync/status`. Add comments marking where to integrate proper job queue (Postgres-backed pg-boss or similar) when scaling. Implement basic timeout handling (30 min max sync time). Add request deduplication using sync lock.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test API returns immediately while sync runs in background. Test sync status endpoint returns current state. Test duplicate sync requests are rejected. Test UI button shows syncing state and updates on completion.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:44.318Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Sync pipeline orchestrator with pagination, 2) Content normalization layer, 3) Incremental sync with content hash checking, 4) Sync status tracking per source, 5) Background execution mechanism. Handle API rate limits and errors."
+        "expansionPrompt": "Break down into: 1) Sync pipeline orchestrator with pagination, 2) Content normalization layer, 3) Incremental sync with content hash checking, 4) Sync status tracking per source, 5) Background execution mechanism. Handle API rate limits and errors.",
+        "updatedAt": "2026-11-14T17:07:44.318Z"
       },
       {
         "id": "27",
@@ -2124,7 +2142,7 @@
         "dependencies": [
           "26"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2132,9 +2150,10 @@
             "description": "Build the main customer context page at `src/app/(hub)/customers/[customerId]/context/page.tsx` that displays all ingested sources with item and chunk counts.",
             "dependencies": [],
             "details": "Create Server Component page that:\n1. Uses `getCustomerConnection(userId, params.customerId)` to get customer DB\n2. Query `customerSources` with LEFT JOINs to `sourceItems` and `chunks` tables\n3. Use Drizzle's `count()` aggregation grouped by source\n4. Build `SourceList` component showing: source name, provider icon/badge, item count, chunk count, last sync timestamp\n5. Add link to source detail view for each row\n6. Handle empty state when no sources are connected\n7. Include 'Connect Sources' CTA linking to integrations settings",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Verify page loads with customer connection\n2. Test aggregation query returns correct counts\n3. Verify empty state renders when no sources exist\n4. Test navigation link to source detail works\n5. Verify source list updates after new ingestion",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:48.184Z"
           },
           {
             "id": 2,
@@ -2144,9 +2163,10 @@
               1
             ],
             "details": "Create `src/app/(hub)/customers/[customerId]/context/[sourceId]/page.tsx`:\n1. Fetch source metadata (name, provider, config, syncedAt, status)\n2. Query `sourceItems` for this source with pagination (cursor-based or offset)\n3. Build `SourceItemList` component with: title, external URL, sync status, chunk count per item\n4. Add sync status indicator (last sync time, any errors)\n5. Include 'Sync Now' button triggering manual sync (calls task 26 pipeline)\n6. Show provider-specific metadata (e.g., Gmail label, Drive folder path)\n7. Add breadcrumb navigation back to context overview",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Verify source detail loads with correct metadata\n2. Test pagination fetches next page of items\n3. Verify item counts match actual chunks in DB\n4. Test 'Sync Now' button triggers sync API\n5. Test breadcrumb navigation works correctly",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:50.015Z"
           },
           {
             "id": 3,
@@ -2156,9 +2176,10 @@
               2
             ],
             "details": "Create `src/app/(hub)/customers/[customerId]/context/[sourceId]/items/[itemId]/page.tsx`:\n1. Fetch `sourceItem` with its `chunks` array\n2. Display item metadata: title, external URL (opens in new tab), content hash, sync timestamp\n3. Build `ChunkPreview` component showing: chunk text preview (truncated), chunk index, embedding status\n4. Use `<details>` element for expandable chunk list to avoid overwhelming UI\n5. Add 'View Original' link for each item that opens the external URL\n6. Show content type badge (email, document, wiki page, ticket)\n7. Include chunk count summary at top of chunk list",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Verify item loads with all associated chunks\n2. Test external URL link opens in new tab\n3. Verify chunk preview truncation works correctly\n4. Test expandable details toggle shows/hides chunks\n5. Verify content type badges render for different providers",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:51.958Z"
           },
           {
             "id": 4,
@@ -2169,14 +2190,16 @@
               3
             ],
             "details": "Add search to `src/app/(hub)/customers/[customerId]/context/page.tsx`:\n1. Add search input with debounced onChange handler\n2. Create API route `src/app/api/customers/[customerId]/context/search/route.ts`\n3. Use existing retrieval service from task 16 to query pgvector embeddings\n4. Return top-k matching chunks with similarity scores\n5. Build `SearchResults` component showing: chunk text snippet, similarity score, source item title with link\n6. Highlight search terms in result snippets\n7. Show 'No results' state with suggestion to try different terms\n8. Add loading state during search\n9. Include filter by source type (email, doc, etc.)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test search returns relevant chunks for known content\n2. Verify similarity scores are displayed correctly\n3. Test clicking result navigates to source item view\n4. Test empty query shows all sources (default view)\n5. Test filter by source type reduces results appropriately\n6. Verify search is scoped to customer's database only",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T17:07:53.774Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Context sources list page with counts, 2) Source detail view with items, 3) Item viewer with chunks, 4) Search within customer context. Provide links back to original sources."
+        "expansionPrompt": "Break down into: 1) Context sources list page with counts, 2) Source detail view with items, 3) Item viewer with chunks, 4) Search within customer context. Provide links back to original sources.",
+        "updatedAt": "2026-11-14T17:07:53.774Z"
       },
       {
         "id": "28",
@@ -2437,9 +2460,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T17:01:38.477Z",
+      "lastModified": "2026-11-14T17:07:53.774Z",
       "taskCount": 31,
-      "completedCount": 17,
+      "completedCount": 21,
       "tags": [
         "master"
       ]

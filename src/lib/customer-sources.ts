@@ -29,7 +29,17 @@ import { requiredText, ValidationError } from "./validation";
 
 export type CustomerSourceSummary = Pick<
   CustomerSource,
-  "id" | "connectionId" | "kind" | "name" | "selector" | "createdAt"
+  | "id"
+  | "connectionId"
+  | "kind"
+  | "name"
+  | "selector"
+  | "createdAt"
+  | "lastSyncStatus"
+  | "lastSyncStartedAt"
+  | "lastSyncedAt"
+  | "lastSyncItemCount"
+  | "lastSyncError"
 >;
 
 const summary = {
@@ -39,6 +49,11 @@ const summary = {
   name: customerSources.name,
   selector: customerSources.selector,
   createdAt: customerSources.createdAt,
+  lastSyncStatus: customerSources.lastSyncStatus,
+  lastSyncStartedAt: customerSources.lastSyncStartedAt,
+  lastSyncedAt: customerSources.lastSyncedAt,
+  lastSyncItemCount: customerSources.lastSyncItemCount,
+  lastSyncError: customerSources.lastSyncError,
 };
 
 export function isCustomerSourceKind(

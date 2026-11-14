@@ -6,13 +6,15 @@ import type { CustomerSourceKind } from "@/db/control-plane/schema";
 import { ActionForm } from "@/components/action-form";
 import { Field, TextField } from "@/components/field";
 import { PageHeader } from "@/components/page-header";
+import { UploadForm } from "@/components/upload-form";
 import { cardClass, inputClass, linkClass } from "@/components/ui";
 import {
   GMAIL_QUERY_MAX_LENGTH,
   listAvailableSources,
   listCustomerSources,
+  type CustomerSourceSummary,
 } from "@/lib/customer-sources";
-import { requireCustomer } from "@/lib/hub";
+import { formatDate, requireCustomer } from "@/lib/hub";
 import {
   IntegrationError,
   listIntegrationConnections,
@@ -20,10 +22,13 @@ import {
   type IntegrationConnectionSummary,
 } from "@/lib/integrations";
 
+import { MAX_UPLOAD_BYTES, UPLOAD_EXTENSIONS } from "@/lib/text-extraction";
+
 import {
   addCustomerSourceAction,
   addGmailQuerySourceAction,
   removeCustomerSourceAction,
+  syncCustomerSourceAction,
 } from "./actions";
 
 export const metadata: Metadata = { title: "Context sources" };
@@ -34,6 +39,17 @@ const KIND_LABELS: Record<CustomerSourceKind, string> = {
   confluence: "Confluence space",
   jira: "Jira project",
 };
+
+function syncSummary(source: CustomerSourceSummary): string {
+  if (source.lastSyncStatus === "running") return "Syncing…";
+  if (source.lastSyncStatus === "error") {
+    return `Last sync failed: ${source.lastSyncError ?? "unknown error"}`;
+  }
+  if (source.lastSyncStatus === "ok" && source.lastSyncedAt) {
+    return `Synced ${formatDate(source.lastSyncedAt)} · ${source.lastSyncItemCount ?? 0} items`;
+  }
+  return "Not synced yet";
+}
 
 interface PickerProps {
   organizationId: string;
@@ -132,7 +148,25 @@ export default async function CustomerSourcesPage({
                   <span className="text-muted">
                     · {KIND_LABELS[source.kind]}
                   </span>
+                  <span
+                    className={`block text-xs ${
+                      source.lastSyncStatus === "error"
+                        ? "text-danger"
+                        : "text-muted"
+                    }`}
+                  >
+                    {syncSummary(source)}
+                  </span>
                 </span>
+                <ActionForm
+                  action={syncCustomerSourceAction.bind(
+                    null,
+                    customerId,
+                    source.id,
+                  )}
+                  submitLabel={`Sync ${source.name}`}
+                  className="flex flex-col items-end gap-2"
+                />
                 <ActionForm
                   action={removeCustomerSourceAction.bind(
                     null,
@@ -149,6 +183,25 @@ export default async function CustomerSourcesPage({
         ) : (
           <p className="text-muted text-sm">Nothing selected yet.</p>
         )}
+      </section>
+
+      <section
+        aria-labelledby="upload-heading"
+        className={`${cardClass} flex flex-col gap-4 p-6`}
+      >
+        <div>
+          <h3 id="upload-heading" className="text-base font-semibold">
+            Upload files
+          </h3>
+          <p className="text-muted mt-1 text-sm">
+            Add documents directly to {customer.name}&apos;s context.
+          </p>
+        </div>
+        <UploadForm
+          customerId={customerId}
+          accept={UPLOAD_EXTENSIONS.join(",")}
+          maxMegabytes={MAX_UPLOAD_BYTES / 1024 / 1024}
+        />
       </section>
 
       {connections.length ? (

@@ -21,6 +21,11 @@ ownership are in the data model from day one, even though v1 is single-user.
 ## Repo layout
 
 - `src/app/` — Next.js App Router: pages, layouts, route handlers (API, webhooks)
+- `src/db/control-plane/` — control-plane Drizzle client (`connection.ts`,
+  `getControlPlaneDb()`) and schema
+- `src/db/customer/schema/` — schema applied to every customer database
+- `drizzle.config.ts` / `drizzle.customer.config.ts` — the two migration
+  tracks; generated SQL lands in `drizzle/control-plane` and `drizzle/customer`
 - `public/` — static assets
 - `docs/` — this file
 - `.taskmaster/` — PRD (`docs/prd.md`), raw scope (`docs/scope.md`), task backlog

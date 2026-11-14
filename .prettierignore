@@ -12,3 +12,6 @@ graphify-out/
 AGENTS.md
 .mcp.json
 CLAUDE.md
+
+# Generated Drizzle migrations
+drizzle/

@@ -1,0 +1,14 @@
+.next/
+out/
+build/
+dist/
+node_modules/
+package-lock.json
+next-env.d.ts
+graphify-out/
+.taskmaster/
+.claude/
+.devcontainer/
+AGENTS.md
+.mcp.json
+CLAUDE.md

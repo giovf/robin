@@ -1,6 +1,5 @@
 {
-  // Renamed by Claude during /setup to match the project.
-  "name": "New Project (Claude Code + Taskmaster)",
+  "name": "Robin",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
@@ -23,19 +22,29 @@
   "mounts": [
     "source=${localWorkspaceFolderBasename}-claude-config,target=/home/vscode/.claude,type=volume",
     "source=${localWorkspaceFolderBasename}-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
-    "source=${localWorkspaceFolderBasename}-shell-history,target=/commandhistory,type=volume"
+    "source=${localWorkspaceFolderBasename}-shell-history,target=/commandhistory,type=volume",
+    // - pgdata: PostgreSQL data (control-plane DB + one DB per customer)
+    "source=${localWorkspaceFolderBasename}-pgdata,target=/var/lib/postgresql,type=volume"
   ],
 
-  // No ports forwarded by default — Claude adds the stack's ports during
-  // /setup (e.g. 3000 for Next.js; 8081/19000-19006 for Expo).
-  "forwardPorts": [],
+  // 3000: Next.js dev server. For Recall.ai webhooks, set this port's
+  // visibility to Public in the Ports panel. 5432: local PostgreSQL.
+  "forwardPorts": [3000, 5432],
+  "portsAttributes": {
+    "3000": { "label": "Robin (Next.js)", "onAutoForward": "notify" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
+  },
 
   // Runs once after the container is first created (and after every rebuild).
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
+  // Runs on every container start: starts PostgreSQL and ensures the dev
+  // role, `robin` database and pgvector extension exist.
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+
   "customizations": {
     "vscode": {
-      // Base set — stack-specific extensions are added during /setup.
+      // Base set, plus stack-specific extensions at the end.
       "extensions": [
         "anthropic.claude-code",
         "dbaeumer.vscode-eslint",
@@ -43,7 +52,8 @@
         "editorconfig.editorconfig",
         "eamodio.gitlens",
         "github.vscode-pull-request-github",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "bradlc.vscode-tailwindcss"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh",

@@ -383,6 +383,11 @@ prompted it.
   Archiving is reversible (restore); permanent deletion drops the customer database and
   requires typing the customer's name. OAuth tokens are encrypted with AES-256-GCM
   (`TOKEN_ENCRYPTION_KEY`). CI workflow added (GitHub Actions with a pgvector service).
+- 2026-11-14 — Google integration talks to Google's REST APIs directly with `fetch` (no
+  `googleapis` SDK): read-only scopes for Gmail, Drive and Calendar. OAuth redirect URI is
+  `<APP_URL>/api/integrations/google/callback`. A Gmail source is either a label or a Gmail
+  search (addresses/domains); a Drive source is a folder (Docs, Sheets, Slides and text
+  files are read; PDFs and Office files wait for the upload/extraction work).
 
 </PRD>
 

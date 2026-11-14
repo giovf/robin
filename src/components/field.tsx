@@ -28,6 +28,8 @@ export function Field({ id, label, hint, children }: FieldProps) {
 
 interface TextFieldProps {
   name: string;
+  /** Element id; defaults to `name`. Set it when a page has several forms with the same field. */
+  id?: string;
   label: string;
   hint?: string;
   defaultValue?: string;
@@ -39,6 +41,7 @@ interface TextFieldProps {
 
 export function TextField({
   name,
+  id = name,
   label,
   hint,
   defaultValue,
@@ -48,17 +51,17 @@ export function TextField({
   autoComplete = "off",
 }: TextFieldProps) {
   const shared = {
-    id: name,
+    id,
     name,
     defaultValue,
     required,
     maxLength,
     autoComplete,
-    "aria-describedby": hint ? `${name}-hint` : undefined,
+    "aria-describedby": hint ? `${id}-hint` : undefined,
     className: inputClass,
   };
   return (
-    <Field id={name} label={label} hint={hint}>
+    <Field id={id} label={label} hint={hint}>
       {multiline ? (
         <textarea rows={4} {...shared} />
       ) : (

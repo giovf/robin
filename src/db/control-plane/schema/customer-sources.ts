@@ -34,6 +34,8 @@ export const customerSources = pgTable(
       .notNull()
       .references(() => integrationConnections.id, { onDelete: "cascade" }),
     kind: text("kind", { enum: CUSTOMER_SOURCE_KINDS }).notNull(),
+    /** Display name, e.g. the Gmail label or Drive folder name. */
+    name: text("name").notNull(),
     selector: jsonb("selector").$type<CustomerSourceSelector>().notNull(),
     ...timestamps,
   },

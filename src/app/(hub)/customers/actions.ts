@@ -83,7 +83,7 @@ export async function deleteCustomerAction(
     const deleted = await deleteCustomer(
       user.organizationId,
       customerId,
-      formData.get("confirm-delete"),
+      formData.get("confirm"),
     );
     if (!deleted) return { error: "This customer is not available." };
     redirect("/customers");

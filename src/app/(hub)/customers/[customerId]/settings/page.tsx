@@ -118,7 +118,8 @@ export default async function CustomerSettingsPage({
           variant="danger"
         >
           <TextField
-            name="confirm-delete"
+            name="confirm"
+            id="confirm-delete"
             label={`Type “${customer.name}” to confirm`}
             required
           />

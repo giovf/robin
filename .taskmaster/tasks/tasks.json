@@ -950,7 +950,7 @@
         "dependencies": [
           "11"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -958,9 +958,10 @@
             "description": "Install the Google API client library and set up the OAuth2Client instance with proper configuration using environment variables for credentials.",
             "dependencies": [],
             "details": "Run `npm install googleapis@latest` to add the Google API client library. Create `src/lib/integrations/google/client.ts` with the OAuth2Client configuration:\n\n```typescript\nimport { google } from 'googleapis';\n\nexport function createOAuth2Client() {\n  return new google.auth.OAuth2(\n    process.env.GOOGLE_CLIENT_ID,\n    process.env.GOOGLE_CLIENT_SECRET,\n    `${process.env.APP_URL}/api/integrations/google/callback`\n  );\n}\n```\n\nAdd placeholder environment variables to `.env.example`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_URL`. The OAuth2Client is instantiated per-request to avoid shared state issues. Export typed helper functions for creating the client. This foundation is used by all subsequent subtasks.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify `npm ls googleapis` shows package installed. Run `npm run typecheck` to confirm TypeScript recognizes googleapis types. Create a simple test that instantiates OAuth2Client without errors (mocking env vars).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:13.383Z"
           },
           {
             "id": 2,
@@ -970,9 +971,10 @@
               1
             ],
             "details": "Create `src/lib/integrations/google/adapter.ts` implementing the IntegrationAdapter interface from Task 11. Define the required scopes as constants:\n\n```typescript\nexport const GOOGLE_SCOPES = {\n  gmail: 'https://www.googleapis.com/auth/gmail.readonly',\n  drive: 'https://www.googleapis.com/auth/drive.readonly',\n  calendar: 'https://www.googleapis.com/auth/calendar.readonly',\n} as const;\n```\n\nImplement `getAuthorizationUrl(state: string, scopes: string[]): string` that calls `oauth2Client.generateAuthUrl()` with `access_type: 'offline'`, `prompt: 'consent'` (to always get refresh token), the provided scopes array, and the state parameter for CSRF protection. Register the adapter with the adapter registry from Task 11 using `registerAdapter('google', googleAdapter)`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that getAuthorizationUrl returns a URL containing accounts.google.com. Verify URL includes correct scopes parameter. Test that state parameter is included in the URL. Verify access_type=offline is present for refresh token support.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:15.203Z"
           },
           {
             "id": 3,
@@ -983,9 +985,10 @@
               2
             ],
             "details": "Add to the Google adapter in `src/lib/integrations/google/adapter.ts`:\n\n```typescript\nasync exchangeCodeForTokens(code: string): Promise<OAuthTokens> {\n  const oauth2Client = createOAuth2Client();\n  const { tokens } = await oauth2Client.getToken(code);\n  return {\n    accessToken: tokens.access_token!,\n    refreshToken: tokens.refresh_token!,\n    expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,\n    scopes: tokens.scope?.split(' ') ?? [],\n  };\n}\n\nasync refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {\n  const oauth2Client = createOAuth2Client();\n  oauth2Client.setCredentials({ refresh_token: refreshToken });\n  const { credentials } = await oauth2Client.refreshAccessToken();\n  // Return new tokens\n}\n```\n\nHandle the case where Google doesn't return a new refresh token (reuse existing). Map Google's token response to the OAuthTokens interface defined in Task 11. Include error handling for invalid/expired codes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock oauth2Client.getToken to return sample tokens and verify mapping to OAuthTokens interface. Test refreshAccessToken returns new access token. Test error handling when code exchange fails. Verify expiry_date is correctly converted to Date.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:17.027Z"
           },
           {
             "id": 4,
@@ -996,9 +999,10 @@
               3
             ],
             "details": "Add Gmail-specific source listing to the adapter's `listSources` method:\n\n```typescript\nasync listSources(tokens: OAuthTokens, sourceType: string): Promise<IntegrationSource[]> {\n  const oauth2Client = createOAuth2Client();\n  oauth2Client.setCredentials({\n    access_token: tokens.accessToken,\n    refresh_token: tokens.refreshToken,\n  });\n  \n  if (sourceType === 'gmail_label') {\n    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });\n    const response = await gmail.users.labels.list({ userId: 'me' });\n    return (response.data.labels ?? []).map(label => ({\n      id: label.id!,\n      name: label.name!,\n      type: 'gmail_label',\n      metadata: { messageCount: label.messagesTotal },\n    }));\n  }\n  // ... other source types\n}\n```\n\nFilter out system labels if needed (INBOX, SENT, etc.) or mark them distinctly. Handle API errors gracefully with typed error responses.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock gmail.users.labels.list to return sample labels. Verify IntegrationSource[] mapping is correct. Test handling of labels with missing optional fields. Test error handling for API failures or invalid tokens.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:18.851Z"
           },
           {
             "id": 5,
@@ -1010,9 +1014,10 @@
               4
             ],
             "details": "Add Drive and Calendar source listing to the adapter:\n\n```typescript\n// In listSources method:\nif (sourceType === 'drive_folder') {\n  const drive = google.drive({ version: 'v3', auth: oauth2Client });\n  const response = await drive.files.list({\n    q: \"mimeType='application/vnd.google-apps.folder'\",\n    fields: 'files(id, name, parents)',\n    pageSize: 100,\n  });\n  return (response.data.files ?? []).map(folder => ({\n    id: folder.id!,\n    name: folder.name!,\n    type: 'drive_folder',\n    metadata: { parentId: folder.parents?.[0] },\n  }));\n}\n\nif (sourceType === 'calendar') {\n  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });\n  const response = await calendar.events.list({\n    calendarId: 'primary',\n    timeMin: new Date().toISOString(),\n    maxResults: 50,\n    singleEvents: true,\n    orderBy: 'startTime',\n  });\n  // Filter to events with conferenceData (meeting links)\n}\n```\n\nFor Calendar, focus on upcoming events with meeting links (Zoom/Meet/Teams URLs) since these are used for the live call assistant feature.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock Drive files.list and Calendar events.list responses. Verify folder listing returns correct IntegrationSource format. Test Calendar filtering for events with meeting links. Test pagination handling if results exceed pageSize.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:20.786Z"
           },
           {
             "id": 6,
@@ -1023,14 +1028,16 @@
               3
             ],
             "details": "Create `src/app/api/integrations/google/authorize/route.ts`:\n\n```typescript\nexport async function GET(request: Request) {\n  const session = await requireAuth();\n  const { searchParams } = new URL(request.url);\n  const scopes = searchParams.get('scopes')?.split(',') ?? Object.values(GOOGLE_SCOPES);\n  \n  const state = crypto.randomUUID(); // Store in session for CSRF check\n  const authUrl = googleAdapter.getAuthorizationUrl(state, scopes);\n  return redirect(authUrl);\n}\n```\n\nCreate `src/app/api/integrations/google/callback/route.ts`:\n\n```typescript\nexport async function GET(request: Request) {\n  const session = await requireAuth();\n  const { searchParams } = new URL(request.url);\n  const code = searchParams.get('code');\n  const state = searchParams.get('state');\n  \n  // Verify state matches stored value (CSRF protection)\n  const tokens = await googleAdapter.exchangeCodeForTokens(code!);\n  // Encrypt tokens using encryption from Task 10\n  // Store in integration_connections table\n  return redirect('/integrations?connected=google');\n}\n```\n\nHandle error cases: user denied access, invalid state, expired code. Store tokens encrypted in the control-plane database's integration_connections table.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test authorize route redirects to Google with correct URL. Test callback route exchanges code for tokens. Verify CSRF state validation works. Test error handling for denied access or invalid codes. Verify tokens are stored encrypted in database.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:22.614Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Install googleapis and configure OAuth2Client, 2) Authorization URL generation with scopes, 3) Token exchange and storage, 4) Gmail label listing, 5) Drive folder listing, 6) Calendar event listing, 7) Callback route handler. Handle token refresh flow."
+        "expansionPrompt": "Break down into: 1) Install googleapis and configure OAuth2Client, 2) Authorization URL generation with scopes, 3) Token exchange and storage, 4) Gmail label listing, 5) Drive folder listing, 6) Calendar event listing, 7) Callback route handler. Handle token refresh flow.",
+        "updatedAt": "2026-11-14T16:58:22.614Z"
       },
       {
         "id": "13",
@@ -1042,7 +1049,7 @@
         "dependencies": [
           "12"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1050,9 +1057,10 @@
             "description": "Create the main integrations page at src/app/(hub)/integrations/page.tsx that displays all available integration providers (Google, Atlassian) with their connection status.",
             "dependencies": [],
             "details": "Create src/app/(hub)/integrations/page.tsx as a Server Component:\n1. Import requireAuth() to ensure authenticated access\n2. Query the integration_connections table filtered by the user's organization ID\n3. Build a getIntegrationConnections(orgId) function that returns connection status for each provider\n4. Render a page with heading 'Integrations' and a grid layout for IntegrationCard components\n5. Pass connection data (connected boolean, account info, last sync time) to each card\n6. Handle URL query params for success/error messages after OAuth callbacks (e.g., ?connected=google&success=true)\n7. Show toast or alert for OAuth result messages\n8. Style using Tailwind CSS 4 tokens from globals.css",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify page loads with auth check, displays correct connection status for each provider, shows success/error messages from query params, and renders provider cards in a responsive grid layout.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:26.267Z"
           },
           {
             "id": 2,
@@ -1062,9 +1070,10 @@
               1
             ],
             "details": "Create src/components/IntegrationCard.tsx:\n1. Props: provider (string), connected (boolean), connectionInfo (optional object with email, name, connectedAt), lastSyncAt (optional Date), onConnect (function), onDisconnect (function)\n2. Display provider logo (stored in public/providers/) and provider name\n3. When connected: show connected account email/name, 'Connected' badge, last sync timestamp, and 'Disconnect' button\n4. When not connected: show 'Connect' button that triggers OAuth redirect\n5. Add confirmation dialog for disconnect action using a simple modal or confirm()\n6. Handle loading states for connect/disconnect actions\n7. Use Tailwind for styling: card with border, hover states, responsive sizing\n8. Export as named export following project conventions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test card renders correctly for both connected and disconnected states, buttons trigger appropriate callbacks, confirmation dialog appears on disconnect, and loading states display during actions.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:28.154Z"
           },
           {
             "id": 3,
@@ -1074,9 +1083,10 @@
               1
             ],
             "details": "Create src/app/api/integrations/[provider]/callback/route.ts:\n1. Handle GET request with code and state query parameters\n2. Verify state parameter matches stored CSRF token from session\n3. Exchange authorization code for access/refresh tokens via provider's token endpoint\n4. Encrypt tokens using the encryption module (depends on Task 10)\n5. Insert or update integration_connections record with: organization_id, provider, encrypted_access_token, encrypted_refresh_token, scopes, token_expiry, account_info (email/name from userinfo endpoint)\n6. Handle OAuth errors: user denied, invalid code, expired code\n7. Redirect to /integrations with query param ?connected=<provider>&success=true or ?error=<code>\n8. Log connection event for audit purposes\n\nAlso create src/app/api/integrations/[provider]/connect/route.ts to initiate OAuth flow:\n1. Generate state token and store in session\n2. Build OAuth authorization URL with correct scopes\n3. Redirect to provider's OAuth page",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test OAuth flow end-to-end: verify state validation, token exchange, encrypted storage, connection record creation, and redirect with correct query params. Test error cases: denied access, invalid state, expired code.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:29.952Z"
           },
           {
             "id": 4,
@@ -1087,14 +1097,16 @@
               2
             ],
             "details": "Create server action in src/app/(hub)/integrations/actions.ts:\n1. Export async function disconnectIntegration(connectionId: string): Promise<{ success: boolean; error?: string }>\n2. Mark with 'use server' directive\n3. Verify user owns the connection (check organization_id matches session)\n4. Begin transaction:\n   - Delete associated customer_sources records that reference this connection\n   - Delete the integration_connections record\n   - Commit transaction\n5. Handle errors: connection not found, permission denied, database errors\n6. Return success/error response for UI feedback\n7. Consider: should we also revoke the OAuth token at the provider? (nice to have)\n\nAlso handle token expiry errors:\n1. Create helper function isTokenExpired(connection) to check token_expiry\n2. In IntegrationCard, show 'Reconnect' instead of 'Disconnect' if token expired\n3. Add visual indicator for expired/invalid connections",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test disconnect removes connection and associated sources in transaction, handles permission errors, returns appropriate success/error responses, and UI updates correctly after disconnect.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:31.723Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Integrations list page showing connected providers, 2) IntegrationCard component with connect/disconnect, 3) OAuth callback handling with success redirect, 4) Disconnect server action. Handle error states (OAuth denied, token expired)."
+        "expansionPrompt": "Break down into: 1) Integrations list page showing connected providers, 2) IntegrationCard component with connect/disconnect, 3) OAuth callback handling with success redirect, 4) Disconnect server action. Handle error states (OAuth denied, token expired).",
+        "updatedAt": "2026-11-14T16:58:31.723Z"
       },
       {
         "id": "14",
@@ -1107,7 +1119,7 @@
           "12",
           "8"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1115,9 +1127,10 @@
             "description": "Build the CustomerSourcesPage server component that fetches available integration connections for the organization and existing customer sources, rendering the page shell with conditional integration sections.",
             "dependencies": [],
             "details": "Create `src/app/(hub)/customers/[customerId]/sources/page.tsx` as a server component. Use `requireAuth()` to get the session, then fetch the organization's integration connections from the control-plane database (`getIntegrationConnections(session.user.organizationId)`). Also fetch existing customer sources from `customer_sources` table (`getCustomerSources(params.customerId)`). Verify customer ownership before displaying. Render a page shell with sections for each connected provider (Google, Atlassian) that conditionally display based on which connections exist. Include breadcrumb navigation back to the customer detail page. Pass the connections and existing selections to child selector components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Navigate to /customers/[customerId]/sources with a valid customer\n2. Verify page loads without errors when no integrations connected\n3. Connect Google integration and refresh - verify Google section appears\n4. Verify customer name displays correctly in the heading\n5. Test unauthorized access returns 404 or redirect",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:35.322Z"
           },
           {
             "id": 2,
@@ -1127,9 +1140,10 @@
               1
             ],
             "details": "Create `src/components/sources/GmailLabelSelector.tsx` as a client component. On mount, call a server action to fetch available labels from the Gmail API via the Google integration adapter. Display labels as a multi-select checklist, showing system labels (INBOX, SENT, etc.) and user-created labels. Pre-select labels already saved in `customer_sources` for this customer. When selection changes, call the `addCustomerSource` or `removeCustomerSource` server actions. Store the selection as JSONB: `{ labelIds: ['INBOX', 'Label_123'] }`. Handle loading and error states gracefully. Include a refresh button to re-fetch labels if the user creates new ones in Gmail.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render GmailLabelSelector with a valid Google connection\n2. Verify labels load and display correctly\n3. Select multiple labels and verify selections persist on page reload\n4. Deselect a label and verify it's removed from customer_sources\n5. Test loading state displays while fetching labels",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:37.122Z"
           },
           {
             "id": 3,
@@ -1139,9 +1153,10 @@
               1
             ],
             "details": "Create `src/components/sources/DriveFolderSelector.tsx` as a client component. Implement a lazy-loading folder tree: initially fetch root folders, then load children on expand. Call server actions that use the Google Drive API via the integration adapter. Display folders with expand/collapse icons and checkboxes. Support selecting multiple folders (each becomes a separate `customer_sources` entry). Store selection as JSONB: `{ folderId: 'abc123', folderName: 'Customer Docs' }`. Show the folder path for clarity. Include a search/filter option for large Drive structures. Handle shared drives vs My Drive distinction. Pre-select folders already saved for this customer.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render DriveFolderSelector with a valid Google connection\n2. Verify root folders load correctly\n3. Expand a folder and verify children load on demand\n4. Select a folder and verify it saves to customer_sources\n5. Refresh page and verify selection persists\n6. Test with deeply nested folder structure",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:39.057Z"
           },
           {
             "id": 4,
@@ -1149,9 +1164,10 @@
             "description": "Create server actions for adding and removing customer sources with proper validation, ownership checks, and JSONB selector storage pattern.",
             "dependencies": [],
             "details": "Create `src/app/(hub)/customers/[customerId]/sources/actions.ts` with server actions. `addCustomerSource(customerId, connectionId, sourceType, selector)`: validate user owns the customer via organization membership, validate the connection belongs to their organization, insert into `customer_sources` table with the provider-specific JSONB selector. `removeCustomerSource(sourceId)`: validate ownership, delete from `customer_sources`, optionally cascade delete related chunks to keep context clean. `getAvailableLabels(connectionId)`: fetch Gmail labels via the integration adapter. `getDriveFolders(connectionId, parentId?)`: fetch Drive folders. All actions must verify the requesting user's organization owns both the customer and the integration connection. Return typed results with proper error handling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Call addCustomerSource with valid parameters and verify row inserted\n2. Call addCustomerSource for customer user doesn't own - verify rejection\n3. Call removeCustomerSource and verify row deleted\n4. Test adding duplicate source (same customer + connection + selector)\n5. Verify JSONB selector stored correctly for each source type",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:40.954Z"
           },
           {
             "id": 5,
@@ -1159,14 +1175,16 @@
             "description": "Create TypeScript types and validation utilities for the provider-specific JSONB selector patterns stored in customer_sources, ensuring type safety across Gmail, Drive, Confluence, and Jira selectors.",
             "dependencies": [],
             "details": "Create `src/lib/sources/types.ts` with discriminated union types for source selectors: `GmailSelector = { type: 'gmail'; labelIds: string[] }`, `DriveSelector = { type: 'drive'; folderId: string; folderName: string }`, `ConfluenceSelector = { type: 'confluence'; spaceKey: string; spaceName: string }`, `JiraSelector = { type: 'jira'; projectKey: string; projectName: string }`. Create `SourceSelector = GmailSelector | DriveSelector | ConfluenceSelector | JiraSelector`. Add Zod schemas for runtime validation when reading from the database. Create helper functions: `parseSelector(jsonb)`, `serializeSelector(selector)`, `getSelectorDisplayName(selector)` for showing human-readable descriptions in the UI. Ensure the customer_sources table uses JSONB column for the selector field in the Drizzle schema.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Validate GmailSelector parses correctly with labelIds array\n2. Validate DriveSelector requires folderId string\n3. Test parseSelector throws on invalid JSON structure\n4. Test getSelectorDisplayName returns readable strings\n5. Verify types compile correctly with Drizzle schema",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-14T16:58:42.801Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Customer sources page fetching available integrations, 2) Gmail label selector component, 3) Drive folder picker component, 4) Add/remove customer source server actions, 5) JSONB selector storage pattern. Ensure sources are isolated per customer."
+        "expansionPrompt": "Break down into: 1) Customer sources page fetching available integrations, 2) Gmail label selector component, 3) Drive folder picker component, 4) Add/remove customer source server actions, 5) JSONB selector storage pattern. Ensure sources are isolated per customer.",
+        "updatedAt": "2026-11-14T16:58:42.801Z"
       },
       {
         "id": "15",
@@ -2413,9 +2431,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T16:52:27.053Z",
+      "lastModified": "2026-11-14T16:58:42.801Z",
       "taskCount": 31,
-      "completedCount": 13,
+      "completedCount": 16,
       "tags": [
         "master"
       ]

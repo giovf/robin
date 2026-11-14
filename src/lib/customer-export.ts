@@ -45,6 +45,7 @@ async function buildExport(
       .select({
         id: customerSources.id,
         kind: customerSources.kind,
+        name: customerSources.name,
         selector: customerSources.selector,
         createdAt: customerSources.createdAt,
       })

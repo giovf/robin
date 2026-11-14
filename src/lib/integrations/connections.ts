@@ -8,6 +8,8 @@ import {
 import { isUuid } from "@/db/customer/database-url";
 
 import { decryptToken, encryptToken } from "../encryption";
+import { IntegrationError } from "./errors";
+import { resolveAdapter } from "./setup";
 import type {
   ConnectedAccount,
   IntegrationProvider,
@@ -55,13 +57,36 @@ function encrypted(tokens: OAuthTokens) {
   };
 }
 
-/** Stores a new connection for the organisation, encrypting its tokens. */
+/**
+ * Stores a connection for the organisation, encrypting its tokens. Connecting
+ * the same external account again updates the existing connection.
+ */
 export async function saveIntegrationConnection(input: {
   organizationId: string;
   provider: IntegrationProvider;
   account: ConnectedAccount;
   tokens: OAuthTokens;
 }): Promise<IntegrationConnectionSummary> {
+  const [existing] = await getControlPlaneDb()
+    .update(integrationConnections)
+    .set({
+      accountLabel: input.account.label,
+      status: "active",
+      ...encrypted(input.tokens),
+    })
+    .where(
+      and(
+        eq(integrationConnections.organizationId, input.organizationId),
+        eq(integrationConnections.provider, input.provider),
+        eq(
+          integrationConnections.externalAccountId,
+          input.account.externalAccountId,
+        ),
+      ),
+    )
+    .returning(summary);
+  if (existing) return existing;
+
   const [connection] = await getControlPlaneDb()
     .insert(integrationConnections)
     .values({
@@ -136,4 +161,61 @@ export async function deleteIntegrationConnection(
     .where(owned(organizationId, connectionId))
     .returning({ id: integrationConnections.id });
   return deleted.length > 0;
+}
+
+/** Refresh this long before the access token actually expires. */
+const REFRESH_MARGIN_MS = 60_000;
+
+/**
+ * Tokens that are safe to use right now for one of the organisation's
+ * connections: refreshed (and re-stored) first if they are about to expire.
+ * Returns null if the connection is not theirs.
+ *
+ * @throws IntegrationError if the provider is unavailable or the refresh is
+ * rejected — in which case the connection is marked `needs_reauth`.
+ */
+export async function getFreshIntegrationTokens(
+  organizationId: string,
+  connectionId: string,
+): Promise<{ provider: IntegrationProvider; tokens: OAuthTokens } | null> {
+  const tokens = await getIntegrationTokens(organizationId, connectionId);
+  if (!tokens) return null;
+  const [{ provider }] = await getControlPlaneDb()
+    .select({ provider: integrationConnections.provider })
+    .from(integrationConnections)
+    .where(owned(organizationId, connectionId));
+
+  const expiring =
+    tokens.expiresAt !== undefined &&
+    tokens.expiresAt.getTime() - Date.now() < REFRESH_MARGIN_MS;
+  if (!expiring) return { provider, tokens };
+
+  const adapter = resolveAdapter(provider);
+  if (!adapter) {
+    throw new IntegrationError(
+      `The ${provider} integration is not configured.`,
+    );
+  }
+  try {
+    if (!tokens.refreshToken) {
+      throw new IntegrationError("No refresh token stored.", 401);
+    }
+    const refreshed = await adapter.refreshTokens(tokens.refreshToken);
+    await updateIntegrationTokens(organizationId, connectionId, refreshed);
+    return {
+      provider,
+      tokens: {
+        ...refreshed,
+        refreshToken: refreshed.refreshToken ?? tokens.refreshToken,
+      },
+    };
+  } catch (error) {
+    if (error instanceof IntegrationError && error.needsReauth) {
+      await getControlPlaneDb()
+        .update(integrationConnections)
+        .set({ status: "needs_reauth" })
+        .where(owned(organizationId, connectionId));
+    }
+    throw error;
+  }
 }

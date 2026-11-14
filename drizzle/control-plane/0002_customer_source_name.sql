@@ -1,0 +1,1 @@
+ALTER TABLE "customer_sources" ADD COLUMN "name" text NOT NULL;

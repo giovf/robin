@@ -59,7 +59,7 @@ export async function retrieveContext(
   if (!text) return [];
 
   const embedder = getEmbeddingProvider();
-  const [vector] = await embedder.embed([text]);
+  const [vector] = await embedder.embed([text], "query");
   const distance = sql`${chunks.embedding} <=> ${JSON.stringify(vector)}::vector`;
   const limit = Math.min(
     Math.max(options.limit ?? DEFAULT_LIMIT, 1),

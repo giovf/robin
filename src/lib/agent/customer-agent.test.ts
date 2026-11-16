@@ -251,6 +251,7 @@ describe("configuration", () => {
   it("reports a missing API key instead of calling out", () => {
     setLlmClient(undefined);
     vi.stubEnv("ROBIN_ANTHROPIC_API_KEY", "");
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
     expect(() => getLlmClient()).toThrowError(LlmError);
     try {
       getLlmClient();

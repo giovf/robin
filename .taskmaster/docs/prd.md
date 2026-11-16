@@ -342,9 +342,8 @@ Customer database (one per customer):
 2. **Customer regions:** which countries are customers in? Determines recording-consent
    rules and any data-residency needs.
 3. **Accounts:** Anthropic and Recall.ai accounts are not yet confirmed.
-4. **Embeddings provider:** which model/service produces embeddings for pgvector?
-   (Until decided, `chunks.embedding` is a 1536-dimension placeholder; changing it is one
-   customer-schema migration plus re-embedding.)
+4. **Embeddings provider:** ~~which model/service produces embeddings for pgvector?~~
+   Decided 2026-11-16: local `multilingual-e5-small` (see Changelog).
 5. **Login method:** e.g. Google sign-in (the user already connects Google) or
    email + password; and which auth library.
 6. **Production hosting:** where Robin runs and which managed Postgres (must support
@@ -406,6 +405,14 @@ prompted it.
   with source citations, using only that customer's retrieved context. **Not yet run
   against the real API** (no key configured; calls cost money) — tested with a fake model
   client. Suggestions arrive as one structured answer; only document drafts stream.
+- 2026-11-16 — Embeddings decided (open question 4): `multilingual-e5-small` run locally
+  (384 dimensions, ~100 languages; library `@huggingface/transformers`). Free, no account,
+  and customer text is not sent to a third-party embeddings processor. The model (~120 MB)
+  downloads once to `.cache/transformers`. `chunks.embedding` is now `vector(384)`; chunks
+  are ~1600 characters to fit the model's input. A hosted model can still replace it behind
+  `EmbeddingProvider`. The agent was run against the live Anthropic API for the first time
+  (question suggestions and a document draft); `ANTHROPIC_API_KEY` is accepted when
+  `ROBIN_ANTHROPIC_API_KEY` is unset.
 
 </PRD>
 

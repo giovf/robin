@@ -5,7 +5,8 @@ export interface ChunkOptions {
   overlapChars?: number;
 }
 
-export const DEFAULT_CHUNK_MAX_CHARS = 2000;
+/** Sized to fit the embedding model's 512-token input with room to spare. */
+export const DEFAULT_CHUNK_MAX_CHARS = 1600;
 export const DEFAULT_CHUNK_OVERLAP_CHARS = 200;
 
 /** Splits text that is too long at the best boundary available. */

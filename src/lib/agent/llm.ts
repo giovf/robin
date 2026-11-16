@@ -165,11 +165,14 @@ let client: LlmClient | undefined;
 /** @throws LlmError("not_configured") when ROBIN_ANTHROPIC_API_KEY is unset. */
 export function getLlmClient(): LlmClient {
   if (!client) {
-    const apiKey = process.env.ROBIN_ANTHROPIC_API_KEY;
+    // ROBIN_ANTHROPIC_API_KEY lets the app use a different key from the
+    // developer tooling; ANTHROPIC_API_KEY is the fallback.
+    const apiKey =
+      process.env.ROBIN_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new LlmError(
         "not_configured",
-        "The AI agent is not configured: ROBIN_ANTHROPIC_API_KEY is not set.",
+        "The AI agent is not configured: set ROBIN_ANTHROPIC_API_KEY (or ANTHROPIC_API_KEY).",
       );
     }
     client = new AnthropicLlmClient(apiKey);

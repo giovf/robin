@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
+    "@huggingface/transformers": "^4.3.2",
     "better-auth": "^1.7.24",
     "drizzle-orm": "^0.45.4",
     "mammoth": "^1.13.0",

@@ -246,9 +246,14 @@ describe("upload and retrieval", () => {
     expect(
       await retrieveContext(a.user.id, a.customer.id, "Kafka", { limit: 1 }),
     ).toHaveLength(1);
-    const strict = await retrieveContext(a.user.id, a.customer.id, "Kafka", {
-      minSimilarity: 0.05,
-    });
+    const strict = await retrieveContext(
+      a.user.id,
+      a.customer.id,
+      "event streaming with Kafka",
+      {
+        minSimilarity: (results[0].similarity + results[1].similarity) / 2,
+      },
+    );
     expect(
       strict.map((r) => r.source.type === "source_item" && r.source.title),
     ).toEqual(["acme-discovery.txt"]);

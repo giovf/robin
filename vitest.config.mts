@@ -29,6 +29,8 @@ export default defineConfig({
       AUTH_SECRET: "test-only-secret-test-only-secret-0123456789",
       APP_URL: "http://localhost:3000",
       ALLOW_SIGNUP: "",
+      // Instant, deterministic stand-in; the real model has its own test.
+      EMBEDDINGS_PROVIDER: "local-hash",
     },
   },
 });

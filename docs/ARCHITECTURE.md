@@ -40,8 +40,8 @@ ownership are in the data model from day one, even though v1 is single-user.
   encrypted connection storage and a fake adapter for tests
 - `src/lib/ingestion/` — `ingestItem` (chunk + embed + store), file upload and
   integration sync; `src/lib/retrieval.ts` — similarity search within one
-  customer; `src/lib/embeddings.ts` — the `EmbeddingProvider` interface (only
-  a local hashing stand-in exists until a provider is chosen)
+  customer; `src/lib/embeddings.ts` — the `EmbeddingProvider` interface
+  (default: local `multilingual-e5-small`; a hashing stand-in for tests)
 - `src/lib/agent/` — the per-customer agent (`getCustomerAgent`), its prompts,
   and the `LlmClient` interface (Anthropic implementation + a fake for tests)
 - `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
@@ -94,7 +94,7 @@ Each sits behind an adapter/interface so it can be faked in tests and swapped.
 - Recall.ai — visible meeting bot (Zoom/Meet/Teams) + real-time transcript
   webhooks; paid
 - Transcription — Recall.ai built-in or Deepgram (undecided, see PRD)
-- Embeddings provider — undecided, see PRD
+- Embeddings — none external: `multilingual-e5-small` runs locally
 - Google OAuth — Gmail, Drive, Calendar (read)
 - Atlassian OAuth — Confluence, Jira (read; writes only after user review and
   explicit confirmation)

@@ -14,11 +14,11 @@ import { createdAt } from "./columns";
 import { sourceItems } from "./source-items";
 
 /**
- * Size of the embedding vectors. PLACEHOLDER: the embeddings provider is a PRD
- * open question. Changing it needs a customer-schema migration that alters the
- * column and re-embeds existing chunks.
+ * Size of the embedding vectors: 384, the output of `multilingual-e5-small`
+ * (see `src/lib/embeddings.ts`). A model with a different size needs a
+ * customer-schema migration that alters the column and re-embeds the chunks.
  */
-export const EMBEDDING_DIMENSIONS = 1536;
+export const EMBEDDING_DIMENSIONS = 384;
 
 /**
  * A retrievable piece of customer context. Belongs to exactly one origin:

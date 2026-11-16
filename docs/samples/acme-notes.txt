@@ -1,0 +1,22 @@
+Acme Logistics — discovery notes, 3 November 2026
+
+Attendees: Dana Whitfield (CTO), Sam Okafor (Finance Director).
+
+Current state
+- Order processing runs on an AS/400 that is about twenty years old.
+- The web shop sends orders as nightly batch files over SFTP, so finance sees orders a day late.
+- Warehouse handheld scanners talk directly to the AS/400. Nobody is sure which interface they use.
+- Month-end close takes nine working days because the batch files are reconciled by hand.
+
+History
+- An event-streaming project using Kafka was started in 2024 and stalled when the lead engineer left.
+
+Goals and constraints
+- Finance wants month-end close down to three days.
+- The board has approved budget for this year but wants a fixed price.
+- It must be live before the summer peak, which starts in June.
+- Acme has two in-house developers; neither knows Kafka.
+
+Open points
+- Who owns the scanner integration?
+- Is the web shop being replaced as well, or only the order back end?

@@ -1,0 +1,9 @@
+{
+  // Port 3000 is forwarded for the dev server; don't announce it every time
+  // the server (re)starts.
+  "remote.portsAttributes": {
+    "3000": { "label": "Robin (Next.js)", "onAutoForward": "silent" },
+    "3100": { "label": "Robin (test run)", "onAutoForward": "silent" }
+  },
+  "remote.otherPortsAttributes": { "onAutoForward": "silent" }
+}

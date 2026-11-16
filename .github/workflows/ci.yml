@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # PostgreSQL with pgvector, as in the dev container.
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: robin
+          POSTGRES_PASSWORD: robin
+          POSTGRES_DB: robin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U robin"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throwaway values for the CI database only.
+      DATABASE_URL: postgres://robin:robin@localhost:5432/robin
+      APP_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-secret-ci-only-secret-0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      # Includes the customer-isolation suite (src/test/isolation.test.ts).
+      - run: npm test
+      - run: npm run build

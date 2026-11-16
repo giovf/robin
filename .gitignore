@@ -1,11 +1,17 @@
 # ── Dependencies
 node_modules/
 
-# ── Build output (extend per stack during /setup)
+# ── Build output
 dist/
 build/
 out/
 *.tsbuildinfo
+
+# ── Next.js
+.next/
+next-env.d.ts
+.vercel
+coverage/
 
 # ── Environment variables (never commit real secrets)
 .env
@@ -50,3 +56,6 @@ graphify-out/
 *.p12
 *.jks
 *.mobileprovision
+
+# ── Downloaded embedding model
+.cache/

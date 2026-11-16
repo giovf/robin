@@ -73,28 +73,12 @@ if [ -f package.json ]; then
 fi
 
 # ----------------------------------------------------------------------
-# First-run banner. Once /setup has scaffolded the project this banner is
-# mostly redundant — Claude may trim it during setup.
+# Graphify: re-install git hooks and rebuild the code graph on a fresh
+# container (hooks live in .git/, the graph in the ignored graphify-out/).
 # ----------------------------------------------------------------------
-cat <<'EOF'
+if command -v graphify >/dev/null 2>&1 && [ -d .claude/skills/graphify ]; then
+  graphify hook install && graphify update . || true
+fi
 
-✓ Container ready.
-
-═══════════════════════════════════════════════════════════════════
-NEXT STEPS
-═══════════════════════════════════════════════════════════════════
-
-  1. Start Claude Code and sign in (auth persists in this project's
-     volume afterwards — you only do this once per project):
-       claude
-     Then run /login if prompted.
-
-  2. If this project hasn't been set up yet, type:
-       /setup
-     Claude will read docs/SETUP.md, ask you for the project scope,
-     and build out the project from there. If setup was interrupted
-     (e.g. by a container rebuild), /setup resumes where it left off.
-
-═══════════════════════════════════════════════════════════════════
-
-EOF
+echo ""
+echo "✓ Container ready. Start the app with: npm run dev"

@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
 # ============================================================================
 # GLOBAL LAYER — stack-agnostic. Every project gets this.
-# Project-specific packages go in the marked section at the bottom, added by
-# Claude during /setup (followed by a one-time container rebuild).
+# Project-specific packages go in the marked section at the bottom
+# (a container rebuild is needed after changing it).
 # ============================================================================
 
 # ---------- System packages ----------
@@ -62,7 +62,7 @@ RUN npm install -g \
       task-master-ai@latest
 
 # ============================================================================
-# PROJECT-SPECIFIC LAYER — edited by Claude during /setup.
+# PROJECT-SPECIFIC LAYER
 #
 # Examples of what belongs here:
 #   Expo/React Native:  apt: watchman, openjdk-17-jdk   npm -g: eas-cli
@@ -74,7 +74,23 @@ RUN npm install -g \
 # (Command Palette -> "Dev Containers: Rebuild Container").
 # ============================================================================
 # <<PROJECT-DEPS-START>>
-# (nothing yet — added during /setup)
+# Robin: PostgreSQL + pgvector running inside the dev container (control-plane
+# DB plus one database per customer). The pgvector package name carries the
+# Postgres major version, so derive it from what apt just installed.
+# The server is started, and the dev role/database created, by
+# .devcontainer/post-start.sh; data lives on the "pgdata" volume.
+USER root
+RUN apt-get update \
+ && export DEBIAN_FRONTEND=noninteractive \
+ && apt-get install -y --no-install-recommends postgresql postgresql-client \
+ && apt-get install -y --no-install-recommends \
+      "postgresql-$(ls /usr/lib/postgresql | sort -n | tail -1)-pgvector" \
+ && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+USER vscode
+
+# Robin: Graphify code graph CLI (PyPI package is "graphifyy", double y).
+ENV PATH=/home/vscode/.local/bin:$PATH
+RUN pipx install graphifyy
 # <<PROJECT-DEPS-END>>
 
 WORKDIR /workspaces

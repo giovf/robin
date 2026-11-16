@@ -1,90 +1,50 @@
-# Claude Project Template
+# Robin
 
-A dev-container starter for new projects, built around **Claude Code +
-Taskmaster**. The container ships only the global toolchain (Node LTS, git,
-GitHub CLI, Claude Code, Taskmaster, TypeScript); everything project-specific
-is added by Claude during a guided `/setup` conversation based on the project
-scope you give it.
+An AI copilot for software architects. Robin listens to live customer calls and
+suggests the next questions to ask, grounded in each customer's own context
+(email, documents, earlier call transcripts). It drafts solution documentation
+and diagrams, and documentation for each life-cycle phase once a solution goes
+ahead. Everything is managed from one operations hub, with every customer kept
+completely separate — its own database and its own AI agent.
 
-> This README is for the **human**. The machine-facing setup guide Claude
-> follows is `docs/SETUP.md`. At the end of setup, Claude replaces this README
-> with a real project README.
+Status: early development. The project is scaffolded; features are being built
+from the backlog in `.taskmaster/`.
 
-> **Contributions:** this template is shared as-is and doesn't accept pull
-> requests (they're closed automatically). Issues and the wiki are open for
-> questions and bug reports. Fork it freely — it's MIT-licensed.
+## Running it
 
-## Getting started
+Open the folder in VS Code and choose **Reopen in Container**. The dev container
+installs Node, PostgreSQL with pgvector and the tooling, and starts the database
+on every start.
 
-1. **Copy the template into a new folder.** Either click **"Use this
-   template"** on GitHub and clone your new repo, or copy a local clone (note
-   the `/.` — it copies dotfiles too):
+```bash
+cp .env.example .env   # then fill in the values you need
+npm install
+npm run dev            # http://localhost:3000
+```
 
-   ```bash
-   cp -a claude-tm-project-template/. /path/to/my-new-project/
-   ```
+Other commands:
 
-2. **Make it a git repo** (skip if you used "Use this template"; you own git
-   setup by design):
+| Command                | What it does                   |
+| ---------------------- | ------------------------------ |
+| `npm run build`        | Production build               |
+| `npm run typecheck`    | Generate route types and `tsc` |
+| `npm run lint`         | ESLint                         |
+| `npm run format`       | Prettier (write)               |
+| `npm run format:check` | Prettier (check only)          |
 
-   ```bash
-   cd /path/to/my-new-project
-   git init
-   git add -A && git commit -m "chore: bootstrap from claude-project-template"
-   ```
+The local database is `postgres://robin:robin@localhost:5432/robin`. If it is not
+running, start it with `bash .devcontainer/post-start.sh`.
 
-3. **Open the folder in VS Code** → when prompted, **"Reopen in Container"**
-   (Command Palette → *Dev Containers: Reopen in Container*). The first build
-   takes a few minutes.
+To receive Recall.ai webhooks in development, set port 3000 to **Public** in the
+VS Code Ports panel and use that address as `APP_URL`.
 
-4. **Start Claude and sign in** (once per project — auth persists in a
-   per-project Docker volume across rebuilds):
+## Where things are
 
-   ```bash
-   claude
-   ```
+- `docs/ARCHITECTURE.md` — the stable architecture decisions
+- `.taskmaster/docs/prd.md` — product requirements, roadmap and open questions
+- `task-master list` / `task-master next` — the backlog
+- `CLAUDE.md` — conventions and the working loop for Claude Code sessions
 
-   Run `/login` if prompted.
+## License
 
-5. **Type `/setup`.** Claude reads `docs/SETUP.md` and takes it from there:
-   it asks for your project scope (a file or a description), interviews you on
-   the gaps, picks/confirms the stack, extends the dev container, scaffolds
-   the project, drafts a PRD with you, and initialises the Taskmaster backlog.
-   It also offers one optional add-on (default: no):
-   [Graphify](https://github.com/Graphify-Labs/graphify), a local knowledge
-   graph of your code that Claude queries before grepping and that rebuilds
-   itself on every commit.
-
-   Setup usually includes **one container rebuild** (to bake in stack-specific
-   dependencies). Claude will tell you exactly when and how; afterwards, start
-   `claude` again and type `/setup` — it resumes from
-   `docs/SETUP-PROGRESS.md` automatically.
-
-## What's in the box
-
-| Path | What it is |
-| --- | --- |
-| `.devcontainer/` | Ubuntu LTS + Node LTS image (latest at build time), global CLIs, per-project volumes for Claude auth / `node_modules` / shell history. Project deps get added between the `<<PROJECT-DEPS-*>>` markers in the Dockerfile. |
-| `CLAUDE.md` | Always-loaded project instructions (conventions, workflow). Contains `SETUP:` markers Claude fills in during setup. |
-| `docs/SETUP.md` | The guided-setup playbook Claude follows after `/setup`. |
-| `docs/ARCHITECTURE.md` | Architecture summary skeleton, imported into every Claude session via `CLAUDE.md`. |
-| `.claude/commands/setup.md` | The `/setup` slash command. |
-| `.claude/commands/tm/` | Slash commands for common Taskmaster operations (`/tm/next-task`, `/tm/parse-prd`, …). |
-| `.mcp.json` | Registers the `task-master-ai` MCP server (approve it once when Claude Code asks). |
-| `.taskmaster/` | Taskmaster config (uses the `claude-code` provider — **no API keys needed**), PRD template, docs folder. |
-| `LICENSE` | MIT license for the template. `/setup` asks which license your project wants and replaces it. |
-| `.env.example` | Baseline env file; extended with project variables during setup. |
-
-## Notes
-
-- **Volumes are per-project** (named after the folder), so multiple projects
-  created from this template never share `node_modules`, Claude auth, or
-  shell history. Rebuilding the container keeps all three.
-- **Rebuilds**: any time `.devcontainer/Dockerfile` changes, run Command
-  Palette → *Dev Containers: Rebuild Container*. Claude cannot do this from
-  inside the container — it will ask you.
-- **Taskmaster API keys** are only needed if you want non-Claude models or
-  `--research` mode; add them to `.env` / `.mcp.json` (see `.env.example`).
-- To test on a physical phone from inside a container (mobile projects), use
-  tunnel mode (e.g. `npx expo start --tunnel`) — LAN forwarding through Docker
-  often doesn't reach the device.
+Proprietary. All rights reserved.

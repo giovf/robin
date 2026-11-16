@@ -19,10 +19,13 @@ import { getSolution } from "../solutions";
 import { optionalText, ValidationError } from "../validation";
 import { getLlmClient } from "./llm";
 import {
+  buildDiagramPrompt,
   buildDocumentPrompt,
   buildSuggestionsPrompt,
+  DIAGRAM_SYSTEM_PROMPT,
   DOCUMENT_SYSTEM_PROMPT,
   SUGGESTIONS_SYSTEM_PROMPT,
+  type DiagramTypeId,
 } from "./prompts";
 
 /*
@@ -37,6 +40,7 @@ export const MAX_SUGGESTIONS = 3;
 const TRANSCRIPT_WINDOW_CHARS = 6000;
 const SUGGESTION_CONTEXT_CHUNKS = 6;
 const DOCUMENT_CONTEXT_CHUNKS = 20;
+const DIAGRAM_CONTEXT_CHUNKS = 12;
 const INSTRUCTIONS_MAX_LENGTH = 4000;
 const MODEL_MAX_LENGTH = 100;
 
@@ -174,6 +178,44 @@ export class CustomerAgent {
       onText,
     );
     return { content: content.trim(), citations: toCitations(context) };
+  }
+
+  /**
+   * Draws a diagram of one of this customer's solutions as Mermaid code.
+   *
+   * @throws LlmError, ValidationError, CustomerConnectionError
+   */
+  async generateDiagram(input: {
+    solutionId: string;
+    type: DiagramTypeId;
+    brief: string | null;
+  }): Promise<string> {
+    const solution = await this.solution(input.solutionId);
+    const context = await retrieveContext(
+      this.userId,
+      this.customerId,
+      `${input.type} diagram ${input.brief ?? ""}\n${solution.name}\n${solution.description ?? ""}`,
+      { limit: DIAGRAM_CONTEXT_CHUNKS },
+    );
+    const text = await getLlmClient().generateText({
+      model: this.model,
+      system: DIAGRAM_SYSTEM_PROMPT,
+      prompt: buildDiagramPrompt({
+        solution,
+        type: input.type,
+        brief: input.brief,
+        context,
+        instructions: this.config?.systemPromptOverride ?? null,
+      }),
+      effort: "medium",
+      maxTokens: 8000,
+    });
+    // Models sometimes add a code fence despite being told not to.
+    return text
+      .trim()
+      .replace(/^```(?:mermaid)?\s*\n/, "")
+      .replace(/\n```\s*$/, "")
+      .trim();
   }
 
   // ── Memory: conversation turns, stored in the customer's database ───────

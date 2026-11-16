@@ -9,7 +9,7 @@ import {
 } from "@/db/customer/schema";
 
 import { getCustomerConnection } from "./customer-connection";
-import { isSolutionPhase } from "./phases";
+import { isGoingAheadPhase, isSolutionPhase } from "./phases";
 import { optionalText, requiredText, ValidationError } from "./validation";
 
 export const SOLUTION_NAME_MAX_LENGTH = 120;
@@ -110,7 +110,11 @@ export async function updateSolution(
   return update(userId, customerId, solutionId, parseInput(input));
 }
 
-/** Returns null if the solution does not exist. @throws ValidationError */
+/**
+ * Moves a solution to a phase. Moving an exploring solution into Delivery or
+ * later also marks it as going ahead. Returns null if the solution does not
+ * exist. @throws ValidationError
+ */
 export async function setSolutionPhase(
   userId: string,
   customerId: string,
@@ -118,7 +122,15 @@ export async function setSolutionPhase(
   phase: unknown,
 ): Promise<Solution | null> {
   if (!isSolutionPhase(phase)) throw new ValidationError("Unknown phase.");
-  return update(userId, customerId, solutionId, { currentPhase: phase });
+  const current = await getSolution(userId, customerId, solutionId);
+  if (!current) return null;
+  return update(userId, customerId, solutionId, {
+    currentPhase: phase,
+    // Entering a post-sale phase means the customer said yes.
+    ...(current.status === "active" && isGoingAheadPhase(phase)
+      ? { status: "going_ahead" as const }
+      : {}),
+  });
 }
 
 /** Returns null if the solution does not exist. @throws ValidationError */

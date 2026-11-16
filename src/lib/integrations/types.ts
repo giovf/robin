@@ -52,7 +52,10 @@ export interface PublishContent {
   /** Where to publish, e.g. a Confluence space key or Jira project key. */
   target: Record<string, unknown>;
   title: string;
+  /** Plain text. */
   body: string;
+  /** The same content as XHTML, for targets that accept rich text. */
+  bodyHtml?: string;
 }
 
 export interface PublishResult {
@@ -68,8 +71,13 @@ export interface IntegrationAdapter {
   readonly provider: IntegrationProvider;
   /** Source kinds this provider can supply. */
   readonly sourceKinds: readonly CustomerSourceKind[];
-  /** Scopes requested when connecting (read-only unless publishing). */
+  /** Read-only scopes requested when connecting. */
   readonly defaultScopes: readonly string[];
+  /**
+   * Extra scopes that allow `publish`. Requested only when the user chooses
+   * to connect with publishing access.
+   */
+  readonly publishScopes?: readonly string[];
 
   // OAuth
   getAuthorizationUrl(input: {

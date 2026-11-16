@@ -36,7 +36,10 @@ export const OAUTH_FAILURE_MESSAGES: Record<OAuthFailure, string> = {
 };
 
 /** Step 1: where to send the user, plus the state to remember in a cookie. */
-export function startOAuth(provider: string): OAuthStart {
+export function startOAuth(
+  provider: string,
+  options: { publish?: boolean } = {},
+): OAuthStart {
   if (!isProvider(provider)) return { ok: false, error: "unknown_provider" };
   const adapter = resolveAdapter(provider);
   if (!adapter) return { ok: false, error: "not_configured" };
@@ -47,6 +50,11 @@ export function startOAuth(provider: string): OAuthStart {
     authorizationUrl: adapter.getAuthorizationUrl({
       state,
       redirectUri: oauthRedirectUri(provider),
+      // Write scopes only when the user explicitly asked for publishing access.
+      scopes:
+        options.publish && adapter.publishScopes
+          ? [...adapter.defaultScopes, ...adapter.publishScopes]
+          : undefined,
     }),
   };
 }

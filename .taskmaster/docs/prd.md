@@ -427,6 +427,19 @@ prompted it.
   `MEETING_BOT_PROVIDER="fake"` plus `scripts/simulate-call.mjs` exercise all of this
   without Recall.ai. **No real bot has been sent yet.** Customer databases now migrate
   themselves on first use after an upgrade.
+- 2026-11-16 — Documents, diagrams and life-cycle phases built. Nine provisional document
+  templates, one or two per phase (discovery summary, requirements, solution architecture,
+  decision record, proposal, delivery plan, runbook, handover guide, operations review).
+  Drafts stream to the browser, cite their sources as [S1]…, and every save is a new
+  version (history, comparison, restore). Diagram format (open question): Mermaid, with
+  live preview and SVG/PNG export. Entering the Delivery phase marks a solution as going
+  ahead; each phase lists its expected documents and steers call suggestions. Publishing
+  to Confluence creates a new page from the exact version the user reviewed and confirmed,
+  and is recorded in a per-customer `publications` audit log; it needs an Atlassian
+  connection made "with publishing access" (write scopes are never requested otherwise).
+  Publishing to Jira is not built. New libraries: `react-markdown`, `remark-gfm`,
+  `mermaid`, `marked`. Documents and diagrams were generated with the live model; **the
+  Confluence publish has only been tested against a fake**.
 
 </PRD>
 

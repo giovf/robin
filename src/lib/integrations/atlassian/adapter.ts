@@ -147,6 +147,7 @@ export class AtlassianAdapter implements IntegrationAdapter {
   readonly provider = "atlassian" as const;
   readonly sourceKinds = ["confluence", "jira"] as const;
   readonly defaultScopes = ATLASSIAN_SCOPES;
+  readonly publishScopes = ATLASSIAN_PUBLISH_SCOPES;
 
   constructor(
     private readonly config: AtlassianAdapterConfig,
@@ -450,12 +451,14 @@ export class AtlassianAdapter implements IntegrationAdapter {
         body: {
           storage: {
             representation: "storage",
-            value: paragraphs
-              .map(
-                (paragraph) =>
-                  `<p>${escapeHtml(paragraph).replaceAll("\n", "<br />")}</p>`,
-              )
-              .join(""),
+            value:
+              content.bodyHtml ??
+              paragraphs
+                .map(
+                  (paragraph) =>
+                    `<p>${escapeHtml(paragraph).replaceAll("\n", "<br />")}</p>`,
+                )
+                .join(""),
           },
         },
       });

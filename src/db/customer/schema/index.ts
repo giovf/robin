@@ -13,6 +13,7 @@ export * from "./calls";
 export * from "./chunks";
 export * from "./diagrams";
 export * from "./documents";
+export * from "./publications";
 export * from "./solutions";
 export * from "./source-items";
 export * from "./suggestions";

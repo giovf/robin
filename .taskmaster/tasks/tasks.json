@@ -1777,7 +1777,7 @@
         "dependencies": [
           "17"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1785,9 +1785,10 @@
             "description": "Create the document template type definitions and implement initial templates for discovery summary, requirements, and solution architecture documents in src/lib/documents/templates.ts.",
             "dependencies": [],
             "details": "Define a DocumentTemplate TypeScript interface with fields: id (string), name (string), description (string), phase (matching solution phases), prompt (string for agent generation), sections (array of expected document sections). Implement three initial templates:\n\n1. 'discovery-summary' - Discovery Summary template for the discovery phase with sections: Business Context, Current State, Pain Points, Key Stakeholders, Success Criteria\n2. 'requirements' - Requirements Document template for the requirements phase with sections: Functional Requirements, Non-Functional Requirements, Constraints, Assumptions\n3. 'solution-architecture' - Solution Architecture template for the design phase with sections: Architecture Overview, Component Diagram, Technology Stack, Integration Points, Security Considerations\n\nEach template's prompt should instruct the agent to generate content grounded in the customer's context and include citations. Export both the type definitions and the documentTemplates array for use across the application.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify TypeScript types compile correctly. Test that all three templates have valid structure with required fields. Confirm prompts include instructions for citations.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:17.547Z"
           },
           {
             "id": 2,
@@ -1797,9 +1798,10 @@
               1
             ],
             "details": "Create src/components/documents/TemplateSelector.tsx as a client component ('use client'). The component should:\n\n1. Accept props: templates (DocumentTemplate[]), currentPhase (string), onSelect (callback with selected template)\n2. Display templates as cards with name, description, and phase badge\n3. Filter templates to show those matching the current phase prominently, with other phases available but visually de-emphasized\n4. Include a visual indicator for recommended templates based on the current phase\n5. Handle the selection action and pass the chosen template to the parent via onSelect\n6. Follow WCAG 2.1 AA accessibility guidelines with proper keyboard navigation and focus states\n\nAlso create the document generation page at src/app/(hub)/customers/[customerId]/solutions/[solutionId]/documents/new/page.tsx that uses TemplateSelector and initiates document generation when a template is selected.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify template cards render correctly with all template information. Test phase filtering logic. Confirm keyboard navigation works. Test onSelect callback fires with correct template.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:19.602Z"
           },
           {
             "id": 3,
@@ -1810,9 +1812,10 @@
               2
             ],
             "details": "Create src/lib/documents/generator.ts with a generateDocument function that:\n\n1. Takes customerId, solutionId, templateId, and optional user-provided context\n2. Uses the CustomerAgent service (from task 17) to generate document content\n3. Retrieves relevant context from the customer's pgvector store based on the template's sections\n4. Constructs the agent prompt using the template's prompt plus retrieved context\n5. Parses the agent's response to extract citations in a structured format (e.g., [Source: {sourceId}])\n6. Returns a DocumentDraft object with content, extractedCitations (array of {text, sourceItemId, sourceTitle, sourceUrl}), and metadata\n\nCreate a server action or API route at src/app/(hub)/customers/[customerId]/solutions/[solutionId]/documents/new/actions.ts to handle the generation request. Citations should be stored as structured data alongside the document content so they can be rendered as clickable links to the original sources.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test document generation with mock agent responses. Verify citations are correctly extracted and linked to source items. Test error handling when agent or retrieval fails.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:21.477Z"
           },
           {
             "id": 4,
@@ -1822,9 +1825,10 @@
               3
             ],
             "details": "Create src/components/documents/DocumentEditor.tsx as a client component with:\n\n1. A split-pane layout: left side for Markdown editing, right side for live preview\n2. A text editor area with basic Markdown toolbar (headings, bold, italic, lists, links)\n3. Live preview that renders Markdown to HTML with proper styling matching the app's design tokens\n4. Special rendering for citations: detect citation markers and render them as styled, clickable links that show source information on hover\n5. Auto-save draft functionality (debounced, saving to localStorage or server)\n6. Props: initialContent (string), citations (Citation[]), onSave (callback), documentId (optional for existing docs)\n\nUse a lightweight Markdown library (e.g., react-markdown or marked) for rendering. Ensure the editor handles large documents without performance issues. Include keyboard shortcuts for common formatting actions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test Markdown rendering for all supported syntax. Verify citations render as interactive links. Test auto-save functionality. Verify keyboard shortcuts work correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:23.654Z"
           },
           {
             "id": 5,
@@ -1834,9 +1838,10 @@
               4
             ],
             "details": "Extend the document saving functionality to support versioning:\n\n1. Update or create src/lib/documents/versioning.ts with:\n   - saveDocumentWithVersion(customerId, documentId, content, citations, userId): saves content to documents table and creates a new row in document_versions with version number, content snapshot, citations snapshot, and timestamp\n   - Version numbers should be sequential integers per document\n   - Store the diff metadata (lines added/removed) for each version\n\n2. Create server action in src/app/(hub)/customers/[customerId]/solutions/[solutionId]/documents/[documentId]/actions.ts for saving\n\n3. The documents table should track: current content, current version number, lastModifiedAt, lastModifiedBy\n4. The document_versions table should store: documentId, versionNumber, content, citations (JSON), createdAt, createdBy, changeDescription (optional)\n\nThis requires the customer database schema to have documents and document_versions tables (coordinate with task 17 or database setup tasks).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that saving creates a new version. Verify version numbers increment correctly. Test that document content and citations are properly snapshot. Verify concurrent saves are handled.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:25.355Z"
           },
           {
             "id": 6,
@@ -1846,14 +1851,16 @@
               5
             ],
             "details": "Create src/components/documents/VersionHistory.tsx and related components:\n\n1. VersionHistory component showing a list of all versions with: version number, timestamp, author (when multi-user), and optional change description\n2. VersionDiff component that displays side-by-side or inline diff between any two versions (use a diff library like diff or jsdiff)\n3. RestoreVersion functionality that:\n   - Shows a confirmation dialog before restoring\n   - Creates a new version (not overwriting history) with the restored content\n   - Redirects to the editor with the restored content\n\n4. Add a 'History' tab or panel to the document view page at src/app/(hub)/customers/[customerId]/solutions/[solutionId]/documents/[documentId]/page.tsx\n\n5. Server actions for:\n   - getVersionHistory(customerId, documentId): returns all versions\n   - getVersionContent(customerId, documentId, versionNumber): returns a specific version's content\n   - restoreVersion(customerId, documentId, versionNumber): creates new version from old content\n\nEnsure the diff view highlights citation changes distinctly from content changes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test version list displays all versions correctly. Verify diff view shows accurate changes between versions. Test restore creates a new version with old content. Test with documents that have many versions.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:26.972Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) Define document template structure and initial templates, 2) Template selector UI, 3) Document generation using agent with citations, 4) Markdown editor with live preview, 5) Document versioning on save, 6) Version history viewer. Ensure citations link to sources."
+        "expansionPrompt": "Break down into: 1) Define document template structure and initial templates, 2) Template selector UI, 3) Document generation using agent with citations, 4) Markdown editor with live preview, 5) Document versioning on save, 6) Version history viewer. Ensure citations link to sources.",
+        "updatedAt": "2026-11-16T12:49:26.972Z"
       },
       {
         "id": "23",
@@ -1865,7 +1872,7 @@
         "dependencies": [
           "17"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1873,9 +1880,10 @@
             "description": "Install Mermaid.js package and create a reusable React component that renders Mermaid diagram syntax into SVG within the Next.js App Router environment.",
             "dependencies": [],
             "details": "Install Mermaid: `npm install mermaid@latest`. Create `src/components/diagrams/MermaidDiagram.tsx` as a client component with 'use client' directive. Use useRef and useEffect to initialize mermaid with `startOnLoad: false`, then call `mermaid.render()` with the source prop. Generate unique IDs for each diagram instance to avoid conflicts when multiple diagrams are on the same page. Handle loading states while the diagram renders. Implement error boundary to catch and display Mermaid syntax errors gracefully with a user-friendly message showing the error location. Configure mermaid theme to match the app's design tokens from globals.css.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render component with valid flowchart syntax and verify SVG appears. 2. Test with invalid syntax and verify error message displays instead of crash. 3. Test multiple diagrams on same page with unique IDs. 4. Verify component works with SSR (no window errors during build).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:30.215Z"
           },
           {
             "id": 2,
@@ -1885,9 +1893,10 @@
               1
             ],
             "details": "In the customer agent module (created by Task 17), add `generateDiagram(type: DiagramType, context: string): Promise<DiagramSource>`. Define DiagramType enum with 'architecture', 'sequence', 'flowchart', 'er' values. Create type-specific prompt templates in `src/lib/agents/prompts/diagram-prompts.ts` that guide Claude to produce valid Mermaid syntax for each diagram type. Architecture diagrams should use C4-style subgraphs, sequence diagrams use participant/message syntax, flowcharts use TD direction, ER diagrams use erDiagram syntax. Implement `extractMermaidCode()` helper to parse the code block from Claude's response, stripping markdown fences. Add validation step that attempts to parse the generated Mermaid before returning to catch obvious syntax issues early.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Call generateDiagram with 'architecture' type and solution context, verify valid Mermaid returned. 2. Test each diagram type produces syntactically valid Mermaid. 3. Test with minimal context and verify reasonable output. 4. Test extraction handles various markdown code fence formats.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:31.881Z"
           },
           {
             "id": 3,
@@ -1898,9 +1907,10 @@
               2
             ],
             "details": "Create `src/app/(hub)/customers/[customerId]/solutions/[solutionId]/diagrams/page.tsx` for diagram management and `new/page.tsx` for the editor. Editor layout: split view with Monaco editor or textarea on left (for Mermaid source) and MermaidDiagram preview on right. Add debounced (300ms) preview updates as user types. Include diagram type selector dropdown that pre-fills template syntax for the selected type. Add 'Generate from context' button that calls the agent's generateDiagram with current solution context. Store diagrams in customer database with schema: id, solutionId, title, type, source, createdAt, updatedAt. Show syntax error feedback inline below the editor when Mermaid parsing fails. Add save button that persists to database.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Create new diagram, type valid syntax, verify preview updates. 2. Type invalid syntax, verify error shown without crash. 3. Click generate button, verify diagram populates from agent. 4. Save diagram and reload page, verify persisted. 5. Test debouncing doesn't cause visual jitter.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:33.533Z"
           },
           {
             "id": 4,
@@ -1911,14 +1921,16 @@
               3
             ],
             "details": "Add export buttons to the diagram editor and diagram view pages. For SVG export: extract innerHTML from the rendered Mermaid container, create a Blob with 'image/svg+xml' type, use URL.createObjectURL and trigger download with an anchor click. For PNG export: create an offscreen canvas, draw the SVG using canvg or by converting SVG to data URL and drawing to canvas via Image, then call canvas.toDataURL('image/png') and trigger download. Install required package if needed: `npm install canvg@latest` or use native approach with SVG foreignObject. Handle high-DPI displays by scaling canvas appropriately (2x or 3x). Add filename input or auto-generate from diagram title. Show loading indicator during PNG conversion for complex diagrams.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render diagram and export as SVG, verify valid SVG file downloads. 2. Export as PNG, verify valid PNG with correct dimensions. 3. Test PNG export on retina display, verify image is sharp. 4. Test export with complex diagram containing many nodes. 5. Verify filenames are sanitized properly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:35.353Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Install Mermaid and create renderer component, 2) Diagram generation prompt in agent, 3) Diagram editor with live preview, 4) Export to SVG/PNG. Handle Mermaid syntax errors gracefully."
+        "expansionPrompt": "Break down into: 1) Install Mermaid and create renderer component, 2) Diagram generation prompt in agent, 3) Diagram editor with live preview, 4) Export to SVG/PNG. Handle Mermaid syntax errors gracefully.",
+        "updatedAt": "2026-11-16T12:49:35.353Z"
       },
       {
         "id": "24",
@@ -1930,7 +1942,7 @@
         "dependencies": [
           "22"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1938,9 +1950,10 @@
             "description": "Create the lifecycle phase definitions, TypeScript types, and document type mappings in src/lib/phases/index.ts including suggestion focus for each phase.",
             "dependencies": [],
             "details": "Define a Phase type with id, name, order, documents array, and suggestionFocus fields. Create a solutionPhases constant array with the core lifecycle phases: discovery, requirements, design, implementation, validation, deployment, and handoff. Each phase specifies which document templates are relevant (e.g., discovery has 'discovery-summary', requirements has 'requirements' and 'use-cases', design has 'solution-architecture' and 'decision-records', etc.). Add helper functions: getPhaseById(), getNextPhase(currentPhaseId), getPreviousPhase(currentPhaseId), getPhaseDocuments(phaseId). Ensure phase ordering via the 'order' field enables navigation logic. Export all types and utilities for use across the application.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test helper functions: verify getNextPhase returns correct phase, verify getPhaseDocuments returns expected document types, verify boundary conditions (no next phase after final, no previous before first).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:42.369Z"
           },
           {
             "id": 2,
@@ -1950,9 +1963,10 @@
               1
             ],
             "details": "Create src/components/solutions/PhaseIndicator.tsx as a client component ('use client'). Display the current phase name with a visual indicator showing position in the lifecycle. Show a timeline or stepper visualization of all phases with the current one highlighted. Include an 'Advance to {nextPhase.name}' button when a next phase exists. Disable advance button during pending operations. Use the onAdvance callback prop to notify parent of phase transition requests. Handle edge cases: final phase shows completion state, solution marked as going_ahead shows special styling. Use Tailwind for styling with design tokens from globals.css.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Render component with solution in each phase and verify correct phase displayed, correct next phase shown in button, button disabled when no next phase exists.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:44.495Z"
           },
           {
             "id": 3,
@@ -1963,9 +1977,10 @@
               2
             ],
             "details": "Create src/app/(hub)/customers/[customerId]/solutions/[solutionId]/actions.ts with advancePhase server action. The action validates: user owns customer, solution exists, current phase allows advancement. Create PhaseTransitionModal component that: (1) shows which phase the solution is advancing to, (2) lists documents available for generation in the new phase from getPhaseDocuments(), (3) offers checkboxes to select which documents to generate, (4) has confirm/cancel buttons. On confirm: update solution.currentPhase in customer database, optionally trigger document generation for selected templates, return success. Add optimistic UI update in PhaseIndicator. Store phase transition timestamp in solution record.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test server action updates solution.currentPhase correctly, test modal displays correct document options for target phase, test document generation is triggered only for selected templates.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:46.286Z"
           },
           {
             "id": 4,
@@ -1975,9 +1990,10 @@
               3
             ],
             "details": "Add 'goingAhead' boolean field to the solutions table in customer schema (requires migration). Create GoingAheadModal component with elevated confirmation flow: explains that this marks the solution as proceeding to implementation, lists all implementation-phase documents that will be generated. In advancePhase action, detect when transitioning from 'design' to 'implementation': set solution.goingAhead = true, update solution.goingAheadAt timestamp, trigger generation of the full implementation documentation set (implementation-guide, runbook, etc.) not just offered documents. Add visual indicator in solution header when goingAhead = true. This is a one-way transition (cannot un-mark as going ahead).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test design→implementation transition sets goingAhead=true and goingAheadAt timestamp, verify full documentation set is triggered, test that goingAhead cannot be reverted.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:47.987Z"
           },
           {
             "id": 5,
@@ -1987,14 +2003,16 @@
               1
             ],
             "details": "Modify the agent context builder (in src/lib/agent/ or similar) to include current phase information when generating call suggestions. Add currentPhase and suggestionFocus from the solutionPhases lookup to the agent prompt context. Update the suggestion generation prompt to incorporate phase focus: e.g., in discovery focus on 'understanding requirements, pain points, constraints', in design focus on 'architecture decisions, trade-offs, integration points'. Ensure phase change immediately affects subsequent suggestion generation without requiring reconnection. Add phase context to the live call view header so the user sees which phase is informing suggestions. Test that switching phases changes suggestion style appropriately.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock agent calls and verify phase context is included in prompt, test suggestion generation with different phases produces appropriately focused suggestions, verify phase switch updates suggestion context immediately.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:49.648Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Define phase model and document mappings, 2) Phase indicator UI with advance action, 3) Phase transition logic with document generation offer, 4) Going ahead special transition, 5) Update agent context with current phase. Integrate phases into call suggestions."
+        "expansionPrompt": "Break down into: 1) Define phase model and document mappings, 2) Phase indicator UI with advance action, 3) Phase transition logic with document generation offer, 4) Going ahead special transition, 5) Update agent context with current phase. Integrate phases into call suggestions.",
+        "updatedAt": "2026-11-16T12:49:49.648Z"
       },
       {
         "id": "25",
@@ -2243,7 +2261,7 @@
           "22",
           "25"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2251,9 +2269,10 @@
             "description": "Create a DocumentActions component with export and publish buttons that integrate with the existing document view UI, enabling users to initiate the Confluence publishing workflow.",
             "dependencies": [],
             "details": "Create `src/components/documents/DocumentActions.tsx` with two actions: Export PDF and Publish to Confluence. The component should accept the document as a prop and manage modal state for the publish flow. Use Next.js client component ('use client') since it handles interactive state. Style with Tailwind CSS following existing patterns. The publish button should be disabled if no Atlassian connection exists for the customer's organization, with a tooltip explaining why. Import and use the existing Button component from the UI library.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render DocumentActions with a mock document\n2. Verify both buttons appear\n3. Test publish button opens modal state\n4. Test publish button disabled state when no Atlassian connection\n5. Test export button triggers PDF export flow",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:55.123Z"
           },
           {
             "id": 2,
@@ -2263,9 +2282,10 @@
               1
             ],
             "details": "Create `src/components/confluence/SpaceSelector.tsx` as a client component. Use the Atlassian adapter's listConfluenceSpaces function (from task 25) to fetch available spaces. Display as a searchable dropdown with space name and key. Handle loading, error, and empty states. Cache the space list during the modal session to avoid repeated API calls. The component should accept value (selected space) and onChange callback props. If multiple Atlassian sites are connected, first show a site selector before showing spaces for that site.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test loading state shows skeleton/spinner\n2. Test spaces list renders correctly from API response\n3. Test search filtering works case-insensitively\n4. Test selection calls onChange with correct space\n5. Test error state shows retry option\n6. Test multi-site flow if applicable",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:56.819Z"
           },
           {
             "id": 3,
@@ -2276,9 +2296,10 @@
               2
             ],
             "details": "Create `src/components/confluence/PublishToConfluenceModal.tsx`. Include: SpaceSelector for destination, editable page title input (defaulting to document.title), a prominent yellow warning box explaining this will create a new Confluence page, a full document preview showing exactly what will be published (using existing document rendering), and Cancel/Confirm buttons. The confirm button should have distinct styling (e.g., primary color) and text 'Confirm & Publish' to make the action explicit. Disable confirm until space is selected and title is non-empty. Use the existing Modal component from the UI library.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test modal renders with document preview\n2. Test title input defaults to document title and is editable\n3. Test confirm button disabled until space selected and title provided\n4. Test cancel closes modal without action\n5. Test confirm calls onConfirm with space and title\n6. Test warning message is visible and clear",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:49:58.466Z"
           },
           {
             "id": 4,
@@ -2288,9 +2309,10 @@
               3
             ],
             "details": "Create `src/app/actions/confluence.ts` with 'use server' directive. The publishToConfluence function should: 1) Verify user authentication and ownership of the document/customer, 2) Fetch the document content from the customer database, 3) Get Atlassian OAuth tokens from the control-plane database (via organization), 4) Convert document content to Confluence storage format (XHTML), 5) Call Confluence REST API POST /wiki/api/v2/pages to create the page with the specified space key and title, 6) Handle API errors with descriptive messages, 7) Return { success: true, pageUrl: string } or { success: false, error: string }. Use the Atlassian adapter interface for API calls.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test authentication verification rejects unauthorized users\n2. Test document retrieval from customer database\n3. Test content conversion to Confluence format\n4. Test successful API call returns page URL\n5. Test API error handling returns descriptive error\n6. Test missing tokens error is handled gracefully",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:50:00.190Z"
           },
           {
             "id": 5,
@@ -2300,14 +2322,16 @@
               4
             ],
             "details": "Create audit log schema in customer database: `audit_logs` table with fields: id, action (enum including 'confluence_publish'), userId, documentId, targetProvider, targetIdentifier (space key + page ID), metadata (JSONB for additional details), createdAt. Create `src/lib/audit.ts` with logAuditEvent function that writes to the customer database. Integrate into publishToConfluence: after successful page creation, log the action with document ID, target space, created page ID, and timestamp. Log failed attempts as well with error details in metadata. This audit trail is required by PRD for GDPR compliance and tracking writes to external systems.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Test audit log entry created on successful publish\n2. Test audit log captures correct document and target details\n3. Test failed publish attempts are also logged\n4. Test audit log query returns entries for a customer\n5. Test userId correctly identifies the publishing user\n6. Verify audit entries persist across sessions",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:50:02.447Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Publish button on document actions, 2) Space selector for Confluence, 3) Full preview confirmation modal, 4) Confluence page creation via API, 5) Audit log for publishing actions. Ensure explicit confirmation before any write."
+        "expansionPrompt": "Break down into: 1) Publish button on document actions, 2) Space selector for Confluence, 3) Full preview confirmation modal, 4) Confluence page creation via API, 5) Audit log for publishing actions. Ensure explicit confirmation before any write.",
+        "updatedAt": "2026-11-16T12:50:02.447Z"
       },
       {
         "id": "29",
@@ -2492,9 +2516,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-16T12:40:12.543Z",
+      "lastModified": "2026-11-16T12:50:02.447Z",
       "taskCount": 31,
-      "completedCount": 27,
+      "completedCount": 31,
       "tags": [
         "master"
       ]

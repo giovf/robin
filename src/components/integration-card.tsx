@@ -51,6 +51,20 @@ export function IntegrationCard({
         ) : null}
       </div>
 
+      {available && info.canPublish ? (
+        <p className="text-muted text-sm">
+          Connections are read-only. To let Robin publish documents you have
+          reviewed,{" "}
+          <a
+            href={`/api/integrations/${info.provider}/authorize?access=publish`}
+            className="text-accent font-medium underline"
+          >
+            connect with publishing access
+          </a>
+          . Robin still never writes without your confirmation each time.
+        </p>
+      ) : null}
+
       {available ? null : (
         <p className="bg-sunken rounded-control px-3 py-2 text-sm">
           Not available yet. To enable it, set{" "}

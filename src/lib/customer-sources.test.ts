@@ -428,3 +428,20 @@ describe("OAuth connect flow", () => {
     expect(row.encryptedAccessToken).not.toContain("fake-access");
   });
 });
+
+describe("publishing access", () => {
+  it("requests write scopes only when asked", () => {
+    const adapter = new FakeIntegrationAdapter({ provider: "atlassian" });
+    Object.assign(adapter, { publishScopes: ["fake.write"] });
+    clearAdapters();
+    registerAdapter(adapter);
+    const scope = (start: ReturnType<typeof startOAuth>): string | null =>
+      start.ok
+        ? new URL(start.authorizationUrl).searchParams.get("scope")
+        : null;
+    expect(scope(startOAuth("atlassian"))).toBe("fake.read");
+    expect(scope(startOAuth("atlassian", { publish: true }))).toBe(
+      "fake.read fake.write",
+    );
+  });
+});

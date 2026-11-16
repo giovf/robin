@@ -1,6 +1,6 @@
 import type { Solution } from "@/db/customer/schema";
 
-import { phaseLabel } from "../phases";
+import { phaseLabel, phaseSuggestionFocus } from "../phases";
 import type { RetrievalResult } from "../retrieval";
 
 /*
@@ -85,6 +85,10 @@ export function buildSuggestionsPrompt(input: {
   const earlier = input.alreadySuggested?.length
     ? `\n\nYou already suggested these during this call; do not repeat or rephrase them:\n${input.alreadySuggested.map((question) => `- ${question}`).join("\n")}`
     : "";
+  const phaseFocus = phaseSuggestionFocus(input.solution.currentPhase);
+  const focus = phaseFocus
+    ? ` The engagement is in the ${phaseLabel(input.solution.currentPhase)} phase, where what matters most is ${phaseFocus}.`
+    : "";
   return `${solutionBlock(input.solution)}
 
 ${contextBlock(input.context)}
@@ -93,7 +97,7 @@ ${contextBlock(input.context)}
 ${input.transcript}
 </transcript>
 
-Suggest up to ${input.maxSuggestions} questions the architect should ask next, most valuable first.${earlier}${extraInstructions(input.instructions)}`;
+Suggest up to ${input.maxSuggestions} questions the architect should ask next, most valuable first.${focus}${earlier}${extraInstructions(input.instructions)}`;
 }
 
 export function buildDocumentPrompt(input: {
@@ -111,4 +115,60 @@ Draft this document: ${input.documentTitle}
 
 What it should cover:
 ${input.brief}${extraInstructions(input.instructions)}`;
+}
+
+export const DIAGRAM_TYPES = [
+  {
+    id: "architecture",
+    label: "Architecture",
+    mermaid: "flowchart",
+    guidance:
+      "a component diagram using `flowchart LR` or `flowchart TB`: systems and components as nodes, grouped with `subgraph` where it helps, labelled arrows for the main data flows",
+  },
+  {
+    id: "sequence",
+    label: "Sequence",
+    mermaid: "sequenceDiagram",
+    guidance:
+      "a `sequenceDiagram` of the most important interaction between the actors and systems",
+  },
+  {
+    id: "flowchart",
+    label: "Process flow",
+    mermaid: "flowchart",
+    guidance: "a `flowchart TD` of the process, with decisions as diamonds",
+  },
+  {
+    id: "er",
+    label: "Data model",
+    mermaid: "erDiagram",
+    guidance:
+      "an `erDiagram` of the main entities, their key attributes and relationships",
+  },
+] as const;
+
+export type DiagramTypeId = (typeof DIAGRAM_TYPES)[number]["id"];
+
+export const DIAGRAM_SYSTEM_PROMPT = `You are Robin, a copilot for a software architect. You draw diagrams as Mermaid code for the architect to review and edit.
+
+- Output only Mermaid code: no explanation, no Markdown code fence.
+- Draw only what the context supports. Prefer a smaller correct diagram to a larger speculative one.
+- Keep it readable: at most about 15 nodes, short labels.
+- Use only plain letters, digits and underscores in node ids. Put any label containing punctuation or spaces in double quotes, e.g. A["Order service (new)"].
+
+${UNTRUSTED_NOTE}`;
+
+export function buildDiagramPrompt(input: {
+  solution: Solution;
+  type: DiagramTypeId;
+  brief: string | null;
+  context: RetrievalResult[];
+  instructions: string | null;
+}): string {
+  const type = DIAGRAM_TYPES.find((candidate) => candidate.id === input.type);
+  return `${solutionBlock(input.solution)}
+
+${contextBlock(input.context)}
+
+Draw ${type?.guidance ?? "a diagram"}.${input.brief ? `\n\nWhat it should show: ${input.brief}` : ""}${extraInstructions(input.instructions)}`;
 }

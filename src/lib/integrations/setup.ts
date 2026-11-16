@@ -12,6 +12,8 @@ export interface ProviderInfo {
   description: string;
   /** Environment variables that must be set for this provider to work. */
   requiredEnv: readonly string[];
+  /** Can also be connected with write access, for publishing documents. */
+  canPublish?: boolean;
 }
 
 export const PROVIDERS: readonly ProviderInfo[] = [
@@ -26,6 +28,7 @@ export const PROVIDERS: readonly ProviderInfo[] = [
     name: "Atlassian",
     description: "Confluence and Jira (read-only).",
     requiredEnv: ["ATLASSIAN_CLIENT_ID", "ATLASSIAN_CLIENT_SECRET"],
+    canPublish: true,
   },
 ];
 

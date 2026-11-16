@@ -78,6 +78,7 @@ describe("customer provisioning", () => {
       "diagrams",
       "document_versions",
       "documents",
+      "publications",
       "solutions",
       "source_items",
       "suggestions",

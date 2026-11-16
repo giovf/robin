@@ -47,6 +47,9 @@ ownership are in the data model from day one, even though v1 is single-user.
 - `src/lib/calls/` — call sessions: `MeetingBotProvider` (Recall.ai + fake),
   webhook verification, transcript storage, suggestions, transcript indexing;
   `src/app/api/webhooks/recall` receives provider events
+- `src/lib/documents/` — templates, generation, versioning, Markdown→XHTML,
+  Confluence publishing with audit log; `src/lib/diagrams.ts` — Mermaid
+  diagrams; `src/lib/phases.ts` — phases, their documents and suggestion focus
 - `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
   pages and server actions call; actions stay thin
 - `src/test/` — Vitest global setup, fixtures and the customer-isolation suite

@@ -63,7 +63,9 @@ export async function setSolutionPhaseAction(
     );
     if (!solution) return GONE;
     refresh();
-    return { message: "Phase updated." };
+    return {
+      message: "Phase updated. The Documents tab lists what to draft for it.",
+    };
   });
 }
 

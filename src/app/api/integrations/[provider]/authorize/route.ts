@@ -23,7 +23,9 @@ export async function GET(
   if (!user) return redirect("/login");
 
   const { provider } = await context.params;
-  const start = startOAuth(provider);
+  const start = startOAuth(provider, {
+    publish: new URL(request.url).searchParams.get("access") === "publish",
+  });
   if (!start.ok) return redirect(`/integrations?error=${start.error}`);
 
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";

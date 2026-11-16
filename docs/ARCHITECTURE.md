@@ -44,6 +44,9 @@ ownership are in the data model from day one, even though v1 is single-user.
   (default: local `multilingual-e5-small`; a hashing stand-in for tests)
 - `src/lib/agent/` — the per-customer agent (`getCustomerAgent`), its prompts,
   and the `LlmClient` interface (Anthropic implementation + a fake for tests)
+- `src/lib/calls/` — call sessions: `MeetingBotProvider` (Recall.ai + fake),
+  webhook verification, transcript storage, suggestions, transcript indexing;
+  `src/app/api/webhooks/recall` receives provider events
 - `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
   pages and server actions call; actions stay thin
 - `src/test/` — Vitest global setup, fixtures and the customer-isolation suite
@@ -78,6 +81,9 @@ that introduce it — record it here when it exists.
   agent configuration and memory.
 - **Access rule:** customer-scoped code obtains a database connection only
   through the customer-connection resolver, which checks ownership first.
+  Signed meeting-bot webhooks have no user: they use the resolver's bot entry
+  (`getCustomerConnectionForBot`), which checks the bot belongs to that
+  customer. Customer databases are migrated on first use by each process.
 - **Agent:** one agent instance per customer, built on Claude; its prompts and
   retrieval read only that customer's database.
 - **Migrations:** two Drizzle tracks — control plane, and customer schema
@@ -93,7 +99,8 @@ Each sits behind an adapter/interface so it can be faked in tests and swapped.
 - Anthropic API (Claude) — LLM for all agent work
 - Recall.ai — visible meeting bot (Zoom/Meet/Teams) + real-time transcript
   webhooks; paid
-- Transcription — Recall.ai built-in or Deepgram (undecided, see PRD)
+- Transcription — the meeting platform's captions via Recall.ai by default;
+  Recall.ai's paid transcription optional
 - Embeddings — none external: `multilingual-e5-small` runs locally
 - Google OAuth — Gmail, Drive, Calendar (read)
 - Atlassian OAuth — Confluence, Jira (read; writes only after user review and

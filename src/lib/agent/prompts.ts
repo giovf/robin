@@ -79,7 +79,12 @@ export function buildSuggestionsPrompt(input: {
   context: RetrievalResult[];
   maxSuggestions: number;
   instructions: string | null;
+  /** Questions already suggested during this call. */
+  alreadySuggested?: string[];
 }): string {
+  const earlier = input.alreadySuggested?.length
+    ? `\n\nYou already suggested these during this call; do not repeat or rephrase them:\n${input.alreadySuggested.map((question) => `- ${question}`).join("\n")}`
+    : "";
   return `${solutionBlock(input.solution)}
 
 ${contextBlock(input.context)}
@@ -88,7 +93,7 @@ ${contextBlock(input.context)}
 ${input.transcript}
 </transcript>
 
-Suggest up to ${input.maxSuggestions} questions the architect should ask next, most valuable first.${extraInstructions(input.instructions)}`;
+Suggest up to ${input.maxSuggestions} questions the architect should ask next, most valuable first.${earlier}${extraInstructions(input.instructions)}`;
 }
 
 export function buildDocumentPrompt(input: {

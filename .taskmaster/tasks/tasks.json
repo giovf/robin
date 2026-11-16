@@ -1452,7 +1452,7 @@
         "dependencies": [
           "9"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1460,9 +1460,10 @@
             "description": "Build the Recall.ai API client in src/lib/recall/client.ts with functions to create meeting bots and stop them, including TypeScript types for bot options and responses.",
             "dependencies": [],
             "details": "Create `src/lib/recall/client.ts` with:\n1. Define TypeScript interfaces: `BotOptions` (bot_name, transcription_options, real_time_transcription), `RecallBot` (id, status, meeting_url, created_at), `BotStatus` enum (creating, joining, in_call, leaving, left, error)\n2. Implement `createBot(meetingUrl: string, options: BotOptions): Promise<RecallBot>` - POST to Recall.ai /bot endpoint with Authorization header using RECALL_API_KEY, configure real-time transcription webhook URL pointing to `/api/webhooks/recall/transcript`\n3. Implement `stopBot(botId: string): Promise<void>` - POST to /bot/{botId}/leave_call\n4. Implement `getBotStatus(botId: string): Promise<RecallBot>` - GET /bot/{botId} for status polling\n5. Add proper error handling with custom RecallApiError class\n6. Export all types and functions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit tests with mocked fetch: verify correct API URLs, headers, and request bodies are sent. Test error handling for API failures (401, 404, 500). Integration test with Recall.ai sandbox if available.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:24.867Z"
           },
           {
             "id": 2,
@@ -1472,9 +1473,10 @@
               1
             ],
             "details": "Create `src/app/api/webhooks/recall/transcript/route.ts`:\n1. Create `verifyWebhookSignature(signature: string, body: string, secret: string): boolean` using HMAC-SHA256 with RECALL_WEBHOOK_SECRET from environment\n2. Implement POST handler that:\n   - Reads raw body for signature verification before JSON parsing\n   - Verifies x-recall-signature header, returns 401 if invalid\n   - Parses payload to extract bot_id, speaker, text, start_time, end_time\n   - Looks up the call record by bot_id in the customer database\n   - Inserts transcript segment into transcript_segments table\n   - Returns 200 on success, 404 if call not found, 500 on errors\n3. Add proper TypeScript types for Recall.ai webhook payload structure\n4. Log webhook events for debugging (but sanitize sensitive data)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test signature verification with valid/invalid/missing signatures. Mock database operations to verify correct data insertion. Test with sample Recall.ai webhook payloads. Verify 401 returned for tampered payloads.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:26.507Z"
           },
           {
             "id": 3,
@@ -1484,9 +1486,10 @@
               1
             ],
             "details": "Create `src/app/api/webhooks/recall/status/route.ts`:\n1. Reuse signature verification from transcript handler (extract to shared utility in src/lib/recall/webhook-utils.ts)\n2. Define TypeScript types for lifecycle webhook events: bot.joining, bot.in_call, bot.leaving, bot.left, bot.error\n3. Implement POST handler that:\n   - Verifies webhook signature\n   - Extracts event type and bot_id from payload\n   - Maps Recall.ai event types to internal BotStatus enum values\n   - Updates calls table: set bot_status column, optionally set ended_at for terminal states (left, error)\n   - For error events, store error details in a bot_error column\n   - Returns appropriate HTTP status codes\n4. Handle idempotency (same event delivered multiple times)\n5. Add structured logging for bot state transitions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test each lifecycle event type updates status correctly. Verify error details are stored. Test idempotent handling of duplicate webhooks. Verify signature validation rejects tampered payloads.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:28.187Z"
           },
           {
             "id": 4,
@@ -1494,9 +1497,10 @@
             "description": "Extend the customer database calls table schema to store Recall.ai bot state including bot_id, bot_status enum, and bot_error columns using Drizzle ORM migrations.",
             "dependencies": [],
             "details": "Update customer database schema in src/db/customer/schema.ts:\n1. Add to calls table:\n   - `bot_id` varchar(255) nullable (Recall.ai's bot identifier)\n   - `bot_status` enum('creating', 'joining', 'in_call', 'leaving', 'left', 'error') default 'creating'\n   - `bot_error` text nullable (stores error message if bot fails)\n   - `bot_created_at` timestamp nullable (when bot was created in Recall.ai)\n2. Create Drizzle migration for existing databases\n3. Add index on bot_id for webhook lookups\n4. Update any existing call-related TypeScript types to include new fields\n5. Ensure the migration is tracked in the customer schema migration runner so it applies to all customer databases on provisioning and upgrade",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run migration against test database, verify columns created with correct types. Test enum constraint rejects invalid values. Verify index exists on bot_id column.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:29.902Z"
           },
           {
             "id": 5,
@@ -1506,14 +1510,16 @@
               2
             ],
             "details": "Create SSE infrastructure for live transcript streaming:\n1. Create `src/lib/sse/transcript-channel.ts` with a pub/sub mechanism:\n   - Use an in-memory event emitter or a simple Map<callId, Set<subscriber>> for dev\n   - Define `publishTranscriptSegment(callId: string, segment: TranscriptSegment): void`\n   - Define `subscribeToCall(callId: string): AsyncIterable<TranscriptSegment>`\n2. Create SSE route at `src/app/api/calls/[callId]/transcript-stream/route.ts`:\n   - Implement GET handler returning ReadableStream with text/event-stream content type\n   - Subscribe to the call's transcript channel\n   - Format segments as SSE events (data: JSON, event type)\n   - Handle client disconnection cleanup\n3. Update transcript webhook handler to call `publishTranscriptSegment` after storing\n4. Add proper CORS headers for SSE endpoint\n5. Include heartbeat/keepalive messages to prevent connection timeout",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test SSE endpoint returns correct content-type and format. Verify published events reach subscribed clients. Test client disconnection cleans up subscription. Load test multiple concurrent connections.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:31.500Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Recall.ai client with createBot and stopBot, 2) Transcript webhook handler with signature verification, 3) Bot lifecycle webhook handler for status changes, 4) Store bot state in calls table, 5) Publish transcript events for SSE. Handle webhook failures gracefully."
+        "expansionPrompt": "Break down into: 1) Recall.ai client with createBot and stopBot, 2) Transcript webhook handler with signature verification, 3) Bot lifecycle webhook handler for status changes, 4) Store bot state in calls table, 5) Publish transcript events for SSE. Handle webhook failures gracefully.",
+        "updatedAt": "2026-11-16T12:39:31.500Z"
       },
       {
         "id": "19",
@@ -1526,7 +1532,7 @@
           "17",
           "18"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1534,9 +1540,10 @@
             "description": "Create the Server-Sent Events endpoint at /api/calls/[callId]/stream that streams transcript segments and AI suggestions to the client in real-time.",
             "dependencies": [],
             "details": "Create `src/app/api/calls/[callId]/stream/route.ts` with a GET handler that returns a ReadableStream response. Use TextEncoder to format SSE messages. Set proper headers: Content-Type: text/event-stream, Cache-Control: no-cache, Connection: keep-alive. Implement event subscription logic to receive transcript and suggestion events from the agent service (Task 17). Format messages as JSON with a 'type' field distinguishing 'transcript' vs 'suggestion'. Include customer database authorization check using the customer-connection resolver. Handle stream cleanup on client disconnect.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Call endpoint with valid callId and verify SSE connection established with correct headers. 2. Mock transcript/suggestion events and verify they stream to client in correct JSON format. 3. Test unauthorized access returns 401/403. 4. Verify stream cleanup when client disconnects.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:38.464Z"
           },
           {
             "id": 2,
@@ -1546,9 +1553,10 @@
               1
             ],
             "details": "Create `src/app/(hub)/customers/[customerId]/solutions/[solutionId]/call/page.tsx` as a client component. Define TypeScript interfaces: TranscriptSegment (speaker, text, timestamp), Suggestion (id, question, rationale, status). Use useState for transcript[] and suggestions[] arrays. Implement useEffect with EventSource to connect to the SSE endpoint, parsing incoming messages and updating state based on message type. Pass setTranscript and setSuggestions updaters to append new items. Include callId extraction from route params. Import and render TranscriptPanel and SuggestionsPanel components with appropriate props.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Navigate to call page and verify SSE connection opens. 2. Mock SSE events and verify transcript/suggestions state updates. 3. Verify page layout has two-panel structure. 4. Test params extraction works correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:40.161Z"
           },
           {
             "id": 3,
@@ -1558,9 +1566,10 @@
               2
             ],
             "details": "Create `src/components/call/TranscriptPanel.tsx`. Accept segments: TranscriptSegment[] prop. Render each segment with speaker name/label and text. Use a ref to track the scroll container. Implement auto-scroll to bottom when new segments arrive, BUT only if user hasn't scrolled up (track via onScroll checking scrollTop + clientHeight vs scrollHeight). Show a 'resume auto-scroll' button when paused. Use CSS that reserves space for new content to prevent layout shifts (e.g., min-height or flex-grow). Style with Tailwind for readability: clear speaker labels, readable font size, appropriate line-height and padding. Add timestamps in a subtle style.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Add segments and verify they appear in order. 2. Verify auto-scroll keeps newest segment visible. 3. Scroll up manually and verify auto-scroll pauses. 4. Click resume button and verify scrolls back to bottom. 5. Verify no layout shifts when new content arrives.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:41.817Z"
           },
           {
             "id": 4,
@@ -1570,9 +1579,10 @@
               2
             ],
             "details": "Create `src/components/call/SuggestionsPanel.tsx`. Accept suggestions: Suggestion[], onMarkAsked: (id) => void, onDismiss: (id) => void props. Filter suggestions to show only those not dismissed (dismissed can be hidden or shown in collapsed section). Sort by arrival order or priority. Limit visible suggestions to max 3-4 active ones using slice or CSS. Render SuggestionCard for each visible suggestion. Use AnimatePresence or CSS transitions for smooth entry/exit without layout shifts. Implement the handler callbacks to update suggestion status. Style the panel to have clear visual hierarchy with 'new' suggestions highlighted.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render with multiple suggestions and verify max 3-4 shown. 2. Mark suggestion as asked and verify visual state changes (faded). 3. Dismiss suggestion and verify it's removed from view. 4. Verify transitions are smooth without jarring movements. 5. Test callbacks fire with correct suggestion IDs.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:43.423Z"
           },
           {
             "id": 5,
@@ -1582,9 +1592,10 @@
               4
             ],
             "details": "Create `src/components/call/SuggestionCard.tsx`. Accept suggestion: Suggestion, onMarkAsked: () => void, onDismiss: () => void, status: 'new' | 'asked' props. Display question text prominently. Add an info icon or 'Why?' link that shows rationale tooltip on hover (use title attribute or a tooltip component). Add two buttons: 'Mark as Asked' (check icon) and 'Dismiss' (x icon). Apply visual states: new = highlighted background/border (e.g., blue or yellow accent), asked = faded/muted opacity, dismissed = not rendered. Use focus-visible for keyboard accessibility. Keep the card compact to fit 3-4 in the panel without scrolling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render card and verify question text visible. 2. Hover info icon and verify rationale tooltip appears. 3. Click 'Mark as Asked' and verify callback fires. 4. Click 'Dismiss' and verify callback fires. 5. Verify visual states render correctly for new vs asked.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:45.804Z"
           },
           {
             "id": 6,
@@ -1594,14 +1605,16 @@
               2
             ],
             "details": "Enhance the live call page's SSE connection in page.tsx. Track connection status in state: 'connecting' | 'connected' | 'disconnected'. On EventSource error event, close the connection and schedule reconnection with exponential backoff (start at 1s, max 30s, e.g., delays: 1, 2, 4, 8, 16, 30, 30...). Reset backoff on successful connection (onopen). Show a subtle toast or banner when disconnected/reconnecting ('Connection lost, reconnecting...'). On page unmount (useEffect cleanup), close EventSource and clear any reconnection timers. Consider adding a manual 'Reconnect' button when max retries reached. Store retry count in useRef to persist across renders.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Simulate SSE disconnect and verify reconnection attempts. 2. Verify exponential backoff timing (1s, 2s, 4s...). 3. Verify connection status UI updates appropriately. 4. Reconnect successfully and verify backoff resets. 5. Unmount component and verify cleanup (no memory leaks). 6. Test manual reconnect button if implemented.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:47.715Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Break down into: 1) SSE endpoint for call events, 2) Live call page with SSE connection, 3) TranscriptPanel component with auto-scroll, 4) SuggestionsPanel with asked/dismissed states, 5) Suggestion card with rationale tooltip, 6) Reconnection handling for SSE. Optimize for minimal distraction."
+        "expansionPrompt": "Break down into: 1) SSE endpoint for call events, 2) Live call page with SSE connection, 3) TranscriptPanel component with auto-scroll, 4) SuggestionsPanel with asked/dismissed states, 5) Suggestion card with rationale tooltip, 6) Reconnection handling for SSE. Optimize for minimal distraction.",
+        "updatedAt": "2026-11-16T12:39:47.715Z"
       },
       {
         "id": "20",
@@ -1614,7 +1627,7 @@
           "12",
           "18"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1622,9 +1635,10 @@
             "description": "Build the main call start page at src/app/(hub)/customers/[customerId]/solutions/[solutionId]/call/new/page.tsx with a three-step flow (input → consent → starting) using React state to manage transitions between steps.",
             "dependencies": [],
             "details": "Create `src/app/(hub)/customers/[customerId]/solutions/[solutionId]/call/new/page.tsx` as a Server Component wrapper that fetches solution data and passes to a client component. Create `src/components/calls/StartCallFlow.tsx` with 'use client' directive implementing:\n\n1. State management: `useState<'input' | 'consent' | 'starting'>('input')` for current step\n2. State for meetingUrl: `useState<string>('')`\n3. State for selected calendar event: `useState<CalendarEvent | null>(null)`\n4. Render conditional UI based on step:\n   - 'input' step → renders CallInputStep component\n   - 'consent' step → renders ConsentReminderStep component\n   - 'starting' step → renders loading spinner with 'Robin is joining the call...' message\n5. Define callbacks: `onSelectMeeting(url: string)` transitions to consent, `onAcknowledge()` triggers startCall server action, `onCancel()` returns to input step\n6. Handle startCall response: redirect to call live view on success, show error toast on failure\n7. Props: solutionId, customerId from route params, upcomingEvents from parent\n\nStyle with Tailwind using existing design tokens. Ensure accessibility: focus management on step transitions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Navigate to /customers/[id]/solutions/[id]/call/new and verify page renders\n2. Verify initial step is 'input'\n3. Test step transitions work correctly via state changes\n4. Verify 'starting' step shows loading indicator\n5. Test cancel from consent returns to input step\n6. Test keyboard accessibility of step transitions",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:53.121Z"
           },
           {
             "id": 2,
@@ -1634,9 +1648,10 @@
               1
             ],
             "details": "Create `src/components/calls/CallInputStep.tsx` with 'use client' directive:\n\n1. Props interface:\n   - `onPasteLink: (link: string) => void`\n   - `onSelectEvent: (event: CalendarEvent) => void`\n   - `upcomingEvents: CalendarEvent[]`\n\n2. Two input methods:\n   a) Text input for pasting meeting links:\n      - Label: 'Paste meeting link'\n      - Placeholder: 'https://meet.google.com/... or https://zoom.us/...'\n      - Validation: check for valid Zoom/Meet/Teams URL patterns\n      - Submit button: 'Continue' (disabled until valid URL)\n   \n   b) Calendar event list (if upcomingEvents.length > 0):\n      - Section header: 'Or select from upcoming meetings'\n      - List of events showing: title, time, meeting platform icon\n      - Each event is clickable, calls onSelectEvent\n      - Only show events with meetLink property\n      - Sort by start time, limit to next 24 hours\n\n3. CalendarEvent type: { id, title, start, end, meetLink, platform: 'meet' | 'zoom' | 'teams' }\n4. URL validation regex for Google Meet, Zoom, and Teams meeting URLs\n5. Show 'Connect Google Calendar' prompt if upcomingEvents is empty and no connection exists\n\nStyle: Cards for events, clear visual separation between paste and select options.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render component with empty upcomingEvents - verify paste input is shown\n2. Test URL validation accepts valid Meet/Zoom/Teams URLs\n3. Test URL validation rejects invalid URLs\n4. Render with mock events - verify event list displays\n5. Click an event - verify onSelectEvent called with correct event\n6. Paste valid URL and click Continue - verify onPasteLink called\n7. Test accessibility: keyboard navigation through events",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:54.807Z"
           },
           {
             "id": 3,
@@ -1646,9 +1661,10 @@
               1
             ],
             "details": "Create `src/components/calls/ConsentReminderStep.tsx` with 'use client' directive:\n\n1. Props interface:\n   - `meetingUrl: string`\n   - `onAcknowledge: () => void`\n   - `onCancel: () => void`\n   - `isLoading?: boolean` (for when startCall is in progress)\n\n2. UI structure:\n   - Warning-styled card (yellow/amber background per task details)\n   - Icon: warning/alert icon at top\n   - Heading: 'Recording Consent Required'\n   - Body text explaining:\n     - 'Before Robin joins this call, please ensure all participants have consented to being recorded.'\n     - 'Robin will appear as a visible participant named \"Robin Assistant\".'\n   - Meeting URL display (truncated if long) so user confirms correct meeting\n   - Checkbox with label: 'I confirm that all participants have been informed and consent to recording'\n   - Local state: `const [consented, setConsented] = useState(false)`\n   - Button group:\n     - 'Start Recording' button - primary, disabled until consented===true OR isLoading\n     - 'Cancel' button - secondary, calls onCancel\n   - Show spinner in Start Recording button when isLoading\n\n3. Critical: This checkbox acknowledgment is a compliance requirement per PRD\n4. Accessibility: checkbox properly labeled, focus visible, button states clear\n5. Consider adding a link to privacy/consent policy (placeholder for now)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Render component - verify consent message displays\n2. Verify Start Recording button is disabled initially\n3. Check the checkbox - verify button becomes enabled\n4. Uncheck the checkbox - verify button becomes disabled again\n5. Click Start Recording with checkbox checked - verify onAcknowledge called\n6. Click Cancel - verify onCancel called\n7. Test with isLoading=true - verify spinner shows and button disabled\n8. Verify meetingUrl is displayed correctly\n9. Screen reader test: consent text and checkbox are properly announced",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:56.504Z"
           },
           {
             "id": 4,
@@ -1658,9 +1674,10 @@
               1
             ],
             "details": "Create `src/app/(hub)/customers/[customerId]/solutions/[solutionId]/call/actions.ts` with 'use server' directive:\n\n```typescript\n'use server'\nimport { getCustomerConnection } from '@/lib/customer-connection';\nimport { requireAuth } from '@/lib/auth-utils';\nimport { calls } from '@/db/customer/schema';\nimport { createBot } from '@/lib/recall/client';\n\nexport async function startCallSession(\n  customerId: string,\n  solutionId: string,\n  meetingUrl: string\n): Promise<{ success: true; callId: string } | { success: false; error: string }> {\n  // 1. Authenticate and get customer connection\n  const session = await requireAuth();\n  const customerDb = await getCustomerConnection(session.user.id, customerId);\n  \n  // 2. Validate meetingUrl format (Meet/Zoom/Teams patterns)\n  if (!isValidMeetingUrl(meetingUrl)) {\n    return { success: false, error: 'Invalid meeting URL' };\n  }\n  \n  // 3. Verify solution exists and belongs to this customer\n  const solution = await customerDb.query.solutions.findFirst({ where: eq(solutions.id, solutionId) });\n  if (!solution) {\n    return { success: false, error: 'Solution not found' };\n  }\n  \n  // 4. Create call record with consent_acknowledged = true\n  const [call] = await customerDb.insert(calls).values({\n    solutionId,\n    meetingUrl,\n    consentAcknowledged: true, // Critical: only set true because user checked the box\n    botStatus: 'creating',\n  }).returning();\n  \n  // 5. Create Recall.ai bot\n  try {\n    const bot = await createBot({\n      meetingUrl,\n      botName: 'Robin Assistant',\n      webhookUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/recall/transcript`,\n      metadata: { callId: call.id, customerId, solutionId },\n    });\n    \n    // 6. Update call with bot ID\n    await customerDb.update(calls).set({ botId: bot.id, botStatus: 'joining' }).where(eq(calls.id, call.id));\n    \n    return { success: true, callId: call.id };\n  } catch (error) {\n    // Update call status to error\n    await customerDb.update(calls).set({ botStatus: 'error' }).where(eq(calls.id, call.id));\n    return { success: false, error: 'Failed to create meeting bot' };\n  }\n}\n```\n\nAdd URL validation helper for supported meeting platforms.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Call with valid params - verify call record created with consent_acknowledged=true\n2. Mock Recall.ai createBot - verify bot created with correct params\n3. Verify call record updated with botId on success\n4. Test with invalid meetingUrl - verify error returned\n5. Test with non-existent solutionId - verify error returned\n6. Test Recall.ai failure - verify call status set to 'error'\n7. Test unauthenticated request - verify redirect/error\n8. Test unauthorized customer access - verify access denied",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:58.133Z"
           },
           {
             "id": 5,
@@ -1670,14 +1687,16 @@
               2
             ],
             "details": "Create `src/lib/integrations/google/calendar.ts` with:\n\n```typescript\nimport { google } from 'googleapis';\nimport { getIntegrationConnection } from '@/lib/integrations';\nimport { decryptTokens } from '@/lib/crypto';\n\nexport interface CalendarEvent {\n  id: string;\n  title: string;\n  start: Date;\n  end: Date;\n  meetLink: string | null;\n  platform: 'meet' | 'zoom' | 'teams' | null;\n}\n\nexport async function getUpcomingEventsWithMeetings(\n  organizationId: string,\n  options: { hoursAhead?: number } = {}\n): Promise<CalendarEvent[]> {\n  const { hoursAhead = 24 } = options;\n  \n  // Get Google connection for org\n  const connection = await getIntegrationConnection(organizationId, 'google');\n  if (!connection) return [];\n  \n  // Decrypt tokens and create OAuth client\n  const tokens = await decryptTokens(connection.encryptedTokens);\n  const oauth2Client = new google.auth.OAuth2();\n  oauth2Client.setCredentials(tokens);\n  \n  // Query Calendar API\n  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });\n  const now = new Date();\n  const timeMax = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);\n  \n  const response = await calendar.events.list({\n    calendarId: 'primary',\n    timeMin: now.toISOString(),\n    timeMax: timeMax.toISOString(),\n    singleEvents: true,\n    orderBy: 'startTime',\n  });\n  \n  // Filter and transform events with meeting links\n  return response.data.items\n    ?.filter(event => event.conferenceData?.entryPoints?.length || event.hangoutLink)\n    .map(event => ({\n      id: event.id!,\n      title: event.summary || 'Untitled',\n      start: new Date(event.start?.dateTime || event.start?.date!),\n      end: new Date(event.end?.dateTime || event.end?.date!),\n      meetLink: event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || null,\n      platform: detectPlatform(event),\n    })) || [];\n}\n```\n\nIntegrate in the call/new page.tsx Server Component to fetch events and pass to StartCallFlow.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1. Mock googleapis - verify Calendar API called with correct params\n2. Test with events containing Google Meet links - verify correctly extracted\n3. Test with events containing Zoom links - verify platform detected\n4. Test with no Google connection - verify empty array returned\n5. Test with no upcoming events - verify empty array returned\n6. Test token refresh on expiry (if applicable)\n7. Integration test: verify events appear in CallInputStep dropdown\n8. Test time range filtering - only events within hoursAhead returned",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:39:59.764Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Break down into: 1) Call start page with multi-step flow, 2) Meeting link input or Calendar event selection, 3) Consent reminder component with checkbox, 4) Start call server action creating call record and bot, 5) Integrate Calendar events listing. Ensure consent is recorded before bot joins."
+        "expansionPrompt": "Break down into: 1) Call start page with multi-step flow, 2) Meeting link input or Calendar event selection, 3) Consent reminder component with checkbox, 4) Start call server action creating call record and bot, 5) Integrate Calendar events listing. Ensure consent is recorded before bot joins.",
+        "updatedAt": "2026-11-16T12:39:59.764Z"
       },
       {
         "id": "21",
@@ -1690,7 +1709,7 @@
           "15",
           "18"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1698,9 +1717,10 @@
             "description": "Create the webhook handler for Recall.ai's bot.left_call event that triggers post-call processing and updates call status.",
             "dependencies": [],
             "details": "Add handler in the existing Recall webhook route (src/app/api/webhooks/recall/route.ts) for the 'bot.left_call' event. When received: 1) Find the call record by bot_id using findCallByBotId helper, 2) Update the call's endedAt timestamp in the customer database, 3) Trigger async processing via processCallEnd function. Handle missing call records gracefully by logging and returning early. Ensure the webhook responds quickly (< 5s) by offloading heavy processing to a background job or async function that doesn't block the response.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test webhook with mock bot.left_call payload; verify call's endedAt is set; verify processCallEnd is invoked; test graceful handling when call not found.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:40:07.179Z"
           },
           {
             "id": 2,
@@ -1710,9 +1730,10 @@
               1
             ],
             "details": "In processCallEnd function: 1) Query transcriptSegments table filtered by callId, ordered by startTime ascending, 2) Combine segments into formatted transcript with speaker labels (format: 'Speaker: text\\n'), 3) Handle partial/incomplete transcripts by checking if any segments exist and proceeding only if there's content, 4) Store the combined transcript text (consider adding a fullTranscript column to calls table or keeping it derived). Handle edge cases: empty segments array, segments with missing speakers, very long transcripts that may need truncation warnings.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test combining segments with various speaker patterns; test empty segments array returns graceful empty result; test ordering is correct with out-of-order input.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:40:08.869Z"
           },
           {
             "id": 3,
@@ -1722,9 +1743,10 @@
               2
             ],
             "details": "After combining transcript: 1) Insert a sourceItem with provider='call_transcript', title='Call - {date}', externalId=call.id, 2) Use the existing chunkText utility (from task 15) with maxTokens=512 to split transcript, 3) For each chunk call generateEmbedding (from task 15 embedding infrastructure), 4) Insert chunk records with sourceItemId, text, and embedding vector. Reuse chunking and embedding utilities from task 15's document processing. Handle embedding API failures gracefully with retry logic and mark source item as 'failed' if embeddings can't be generated after retries.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test source item creation with correct provider/title; verify chunking produces expected number of chunks; mock embedding API and verify chunks stored with vectors; test error handling when embedding fails.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:40:10.843Z"
           },
           {
             "id": 4,
@@ -1734,14 +1756,16 @@
               3
             ],
             "details": "Create components: 1) CallHistoryList - displays past calls for a solution with date, duration, and status, 2) TranscriptViewer - full-page or modal view showing formatted transcript with speaker labels and timestamps, 3) Add search functionality within transcript using client-side text search or server-side query. Add to solution detail page at src/app/(hub)/customers/[customerId]/solutions/[solutionId]/page.tsx. Include: call date/time, duration, participant count if available, link to view transcript. Style transcript viewer with alternating speaker colors and sticky header showing call metadata.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Render call history with mock data; test transcript viewer displays formatted text with speakers; test search highlights matches; verify empty state when no calls exist.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-11-16T12:40:12.543Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Break down into: 1) Call end webhook handler, 2) Combine transcript segments into full transcript, 3) Create source item and chunk/embed transcript, 4) Call history UI with transcript viewer. Handle partial transcripts gracefully."
+        "expansionPrompt": "Break down into: 1) Call end webhook handler, 2) Combine transcript segments into full transcript, 3) Create source item and chunk/embed transcript, 4) Call history UI with transcript viewer. Handle partial transcripts gracefully.",
+        "updatedAt": "2026-11-16T12:40:12.543Z"
       },
       {
         "id": "22",
@@ -2468,9 +2492,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-14T17:11:18.926Z",
+      "lastModified": "2026-11-16T12:40:12.543Z",
       "taskCount": 31,
-      "completedCount": 23,
+      "completedCount": 27,
       "tags": [
         "master"
       ]

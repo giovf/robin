@@ -34,6 +34,12 @@ export const calls = pgTable(
     botStatus: text("bot_status", { enum: CALL_BOT_STATUSES }),
     startedAt: timestamp("started_at", { withTimezone: true }),
     endedAt: timestamp("ended_at", { withTimezone: true }),
+    /** Why the bot failed or left, as reported by the provider (a code, not content). */
+    botStatusDetail: text("bot_status_detail"),
+    /** When the finished transcript was added to the customer's searchable context. */
+    transcriptIndexedAt: timestamp("transcript_indexed_at", {
+      withTimezone: true,
+    }),
     /** The user confirmed the recording-consent reminder before the bot joined. */
     consentAcknowledged: boolean("consent_acknowledged")
       .default(false)

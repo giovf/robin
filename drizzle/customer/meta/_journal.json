@@ -15,6 +15,13 @@
       "when": 1794832074656,
       "tag": "0001_embedding_384",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794832418615,
+      "tag": "0002_call_tracking",
+      "breakpoints": true
     }
   ]
 }

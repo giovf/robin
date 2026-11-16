@@ -101,6 +101,8 @@ export class CustomerAgent {
   async suggestQuestions(input: {
     solutionId: string;
     transcript: string;
+    /** Questions already suggested in this call, so they are not repeated. */
+    alreadySuggested?: string[];
   }): Promise<SuggestedQuestion[]> {
     const transcript = input.transcript.trim().slice(-TRANSCRIPT_WINDOW_CHARS);
     if (!transcript) return [];
@@ -121,6 +123,7 @@ export class CustomerAgent {
           context,
           maxSuggestions: MAX_SUGGESTIONS,
           instructions: this.config?.systemPromptOverride ?? null,
+          alreadySuggested: input.alreadySuggested,
         }),
         // Live: the answer has to arrive while it is still relevant.
         effort: "low",

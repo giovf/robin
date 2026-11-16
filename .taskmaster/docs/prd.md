@@ -337,8 +337,8 @@ Customer database (one per customer):
 
 ## Open questions
 
-1. **Transcription:** Recall.ai's built-in transcription or Deepgram? (Cost, latency,
-   accuracy, speaker labels.)
+1. **Transcription:** ~~Recall.ai's built-in transcription or Deepgram?~~ Decided
+   2026-11-16: meeting captions by default, Recall.ai transcription optional (see Changelog).
 2. **Customer regions:** which countries are customers in? Determines recording-consent
    rules and any data-residency needs.
 3. **Accounts:** Anthropic and Recall.ai accounts are not yet confirmed.
@@ -413,6 +413,20 @@ prompted it.
   `EmbeddingProvider`. The agent was run against the live Anthropic API for the first time
   (question suggestions and a document draft); `ANTHROPIC_API_KEY` is accepted when
   `ROBIN_ANTHROPIC_API_KEY` is unset.
+- 2026-11-16 — Live calls built on Recall.ai (workspace region `us-west-2`). Transcription
+  (open question 1) defaults to the meeting platform's own captions (`meeting_captions`: no
+  extra charge, but captions must be enabled in the meeting and carry no timestamps);
+  `RECALL_TRANSCRIPT_PROVIDER="recallai_streaming"` switches to Recall.ai's paid
+  transcription. Deepgram is not used. The bot is named "Robin (notetaker)"; it is sent only
+  from the start-call form, which requires the consent acknowledgement (stored with the
+  call). The live screen polls every 2.5 s rather than using server-sent events; question
+  suggestions are generated only while that screen is open, at most every 20 s. Webhooks
+  are accepted only with a valid signature and only if the bot belongs to the customer
+  named in the event. Bot status is polled, so no webhook needs configuring in the Recall
+  dashboard. Finished transcripts are indexed into the customer's context.
+  `MEETING_BOT_PROVIDER="fake"` plus `scripts/simulate-call.mjs` exercise all of this
+  without Recall.ai. **No real bot has been sent yet.** Customer databases now migrate
+  themselves on first use after an upgrade.
 
 </PRD>
 

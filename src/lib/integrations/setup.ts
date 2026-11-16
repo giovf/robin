@@ -16,6 +16,25 @@ export interface ProviderInfo {
   canPublish?: boolean;
 }
 
+/** Add-ons that are on when ENABLED_INTEGRATIONS is not set. */
+const DEFAULT_ENABLED = "google";
+
+/**
+ * Integrations are optional add-on modules, switched on by listing them in
+ * ENABLED_INTEGRATIONS (comma-separated). A module that is off is not shown,
+ * cannot be connected and is never called.
+ */
+export function isIntegrationEnabled(provider: IntegrationProvider): boolean {
+  return (process.env.ENABLED_INTEGRATIONS ?? DEFAULT_ENABLED)
+    .split(",")
+    .map((name) => name.trim().toLowerCase())
+    .includes(provider);
+}
+
+export function enabledProviders(): ProviderInfo[] {
+  return PROVIDERS.filter((info) => isIntegrationEnabled(info.provider));
+}
+
 export const PROVIDERS: readonly ProviderInfo[] = [
   {
     provider: "google",
@@ -37,6 +56,7 @@ export function isProvider(value: string): value is IntegrationProvider {
 }
 
 function build(provider: IntegrationProvider): IntegrationAdapter | null {
+  if (!isIntegrationEnabled(provider)) return null;
   if (provider === "google") {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       return null;
@@ -62,8 +82,8 @@ function build(provider: IntegrationProvider): IntegrationAdapter | null {
 }
 
 /**
- * The adapter for a provider, or null when it is not available (no
- * credentials configured, or not implemented yet). An adapter registered
+ * The adapter for a provider, or null when it is not available (the add-on
+ * is off, or no credentials are configured). An adapter registered
  * explicitly — e.g. a fake in tests — always wins.
  */
 export function resolveAdapter(

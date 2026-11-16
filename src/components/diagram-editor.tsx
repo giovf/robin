@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 
 import type { FormState } from "@/lib/form-action";
 
+import { useMermaid } from "./mermaid-view";
 import {
   cardClass,
   inputClass,
@@ -45,42 +46,7 @@ export function DiagramEditor({
   const [state, formAction, pending] = useActionState(save, {});
   const [name, setName] = useState(title);
   const [source, setSource] = useState(sourceCode);
-  const [svg, setSvg] = useState("");
-  const [problem, setProblem] = useState<string | null>(null);
-  const renderId = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const sequence = useRef(0);
-
-  useEffect(() => {
-    const run = ++sequence.current;
-    const timer = setTimeout(async () => {
-      try {
-        const { default: mermaid } = await import("mermaid");
-        mermaid.initialize({
-          startOnLoad: false,
-          // "strict" sanitises labels and disables click handlers.
-          securityLevel: "strict",
-          theme: window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "neutral",
-        });
-        await mermaid.parse(source);
-        const result = await mermaid.render(`m${renderId}${run}`, source);
-        if (run === sequence.current) {
-          setSvg(result.svg);
-          setProblem(null);
-        }
-      } catch (error) {
-        if (run === sequence.current) {
-          setProblem(
-            error instanceof Error
-              ? error.message.split("\n").slice(0, 4).join("\n")
-              : "The diagram source is not valid Mermaid.",
-          );
-        }
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [source, renderId]);
+  const { svg, problem } = useMermaid(source, 400);
 
   function exportSvg(): void {
     const url = URL.createObjectURL(

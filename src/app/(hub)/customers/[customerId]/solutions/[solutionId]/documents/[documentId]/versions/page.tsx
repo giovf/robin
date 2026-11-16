@@ -69,6 +69,12 @@ export default async function DocumentVersionsPage({
               {current ? null : (
                 <span className="flex flex-wrap items-center gap-3">
                   <Link
+                    href={`${base}?v=${version.version}`}
+                    className={linkClass}
+                  >
+                    Read
+                  </Link>
+                  <Link
                     href={`${base}/versions?v=${version.version}`}
                     className={linkClass}
                     aria-current={

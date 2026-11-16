@@ -31,6 +31,7 @@ export default defineConfig({
       ALLOW_SIGNUP: "",
       // Instant, deterministic stand-in; the real model has its own test.
       EMBEDDINGS_PROVIDER: "local-hash",
+      ENABLED_INTEGRATIONS: "google,atlassian",
     },
   },
 });

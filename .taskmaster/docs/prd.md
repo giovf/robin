@@ -98,7 +98,8 @@ customers. The design must allow growth to multiple users and organisations late
 
 ## 7. Integrations
 
-- **v1:** Google (Gmail, Drive, Calendar), Confluence, Jira.
+- **v1:** Google (Gmail, Drive, Calendar). Confluence and Jira are a parked add-on
+  (built, switched off — see Changelog 2026-11-16).
 - **What:** OAuth connections managed in the hub. Reading for context ingestion; Calendar to
   find upcoming customer meetings and their meeting links; publishing generated documents to
   Confluence / creating Jira issues **only** as a user-reviewed, explicitly confirmed action.
@@ -452,3 +453,11 @@ prompted it.
   database to `archived_<name>` (content kept), deletion drops it; customer databases are
   named `customer_<uuid>`; Vitest added as the test runner, running against a throwaway
   `robin_test` control plane.
+- 2026-11-16 — Integrations are optional add-on modules, switched on with
+  `ENABLED_INTEGRATIONS` (default: `google`). **Atlassian (Confluence, Jira ingestion and
+  Confluence publishing) is parked**: the code stays but it is off, hidden and never called
+  unless enabled. Phase 6 is therefore deferred (task 32, at the user's request).
+- 2026-11-16 — Output documents are read inside Robin instead of being published out: a
+  customer-level Documents library across all solutions with an in-page preview of
+  documents and diagrams, and a reading view per document (outline, any earlier version,
+  Markdown download, print/PDF, previous/next). Editing moved to its own page (task 33).

@@ -23,6 +23,8 @@ high-signal — it's part of every prompt, so verbosity costs tokens.
 ## Commands
 
 - `npm run dev` — dev server on http://localhost:3000
+- `npm run tunnel` — free Cloudflare quick tunnel to the dev server (public
+  address for Recall.ai webhooks; put it in `WEBHOOK_BASE_URL`)
 - `npm run build` — production build
 - `npm run typecheck` — `next typegen && tsc --noEmit`
 - `npm run lint` — ESLint

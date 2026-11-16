@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { IntegrationCard } from "@/components/integration-card";
 import { PageHeader } from "@/components/page-header";
 import {
+  enabledProviders,
   listIntegrationConnections,
   PROVIDERS,
   resolveAdapter,
@@ -23,6 +24,9 @@ export default async function IntegrationsPage({
   const user = await requireUser();
   const { connected, error } = await searchParams;
   const connections = await listIntegrationConnections(user.organizationId);
+
+  const enabled = enabledProviders();
+  const parked = PROVIDERS.filter((info) => !enabled.includes(info));
 
   const connectedInfo = PROVIDERS.find((info) => info.provider === connected);
   const failure =
@@ -53,7 +57,7 @@ export default async function IntegrationsPage({
         </p>
       ) : null}
       <div className="grid gap-4">
-        {PROVIDERS.map((info) => (
+        {enabled.map((info) => (
           <IntegrationCard
             key={info.provider}
             info={info}
@@ -67,6 +71,13 @@ export default async function IntegrationsPage({
           />
         ))}
       </div>
+      {parked.length ? (
+        <p className="text-muted text-sm">
+          Not switched on in this installation:{" "}
+          {parked.map((info) => info.name).join(", ")}. Integrations are
+          optional add-ons, enabled with the ENABLED_INTEGRATIONS setting.
+        </p>
+      ) : null}
     </>
   );
 }

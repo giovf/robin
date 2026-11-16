@@ -121,7 +121,9 @@ export async function startCall(
       botName: BOT_NAME,
       webhookUrl: new URL(
         "/api/webhooks/recall",
-        requireEnv("APP_URL"),
+        // The provider must reach this over the internet; in development
+        // that is a tunnel address, while APP_URL stays on localhost.
+        process.env.WEBHOOK_BASE_URL || requireEnv("APP_URL"),
       ).toString(),
       metadata: { customer_id: customerId, call_id: call.id },
     });

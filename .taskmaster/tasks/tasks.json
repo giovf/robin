@@ -2512,13 +2512,37 @@
         "recommendedSubtasks": 4,
         "expansionPrompt": "Break down the Vitest test runner setup into subtasks: 1) Install dependencies and verify existing vitest package, create vitest.config.ts with vite-tsconfig-paths plugin for @/ alias support; 2) Create src/test/setup.ts for .env loading using process.loadEnvFile; 3) Create src/test/db.ts with createTestDatabase() and createTestCustomerDatabase() utilities for throwaway PostgreSQL database management including pgvector extension setup and cleanup functions; 4) Add npm scripts (test/test:watch) to package.json and create src/db/control-plane/connection.test.ts as validation test to verify the infrastructure works correctly",
         "updatedAt": "2026-11-14T16:36:49.029Z"
+      },
+      {
+        "id": "32",
+        "title": "Integrations as optional add-on modules; park Atlassian",
+        "description": "ENABLED_INTEGRATIONS env (default google). Atlassian ingestion and Confluence publishing stay in the code but are hidden and unavailable unless enabled.",
+        "details": "isIntegrationEnabled/enabledProviders in src/lib/integrations/setup.ts; resolveAdapter returns null for add-ons that are off; integrations page lists only enabled add-ons; publish link, page and action gated. PRD changelog + ARCHITECTURE updated.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-11-16T15:01:50.011Z"
+      },
+      {
+        "id": "33",
+        "title": "Document library and reading view",
+        "description": "Output documents are navigable and previewable in the hub: customer-level Documents tab (library across solutions with in-page preview of documents and diagrams) and a reading view per document with outline, version reading, download, print, previous/next. Editing moves to /edit.",
+        "details": "src/lib/documents/library.ts, outline.ts; components document-outline, mermaid-view, print-button; pages customers/[id]/documents and documents/[id]/edit; download route. Verified in headless Chromium.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-11-16T15:01:50.022Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-11-16T12:50:02.447Z",
-      "taskCount": 31,
-      "completedCount": 31,
+      "lastModified": "2026-11-16T15:01:50.022Z",
+      "taskCount": 33,
+      "completedCount": 33,
       "tags": [
         "master"
       ]

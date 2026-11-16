@@ -28,7 +28,7 @@ function Placeholder({ className }: { className: string }) {
 
 export function Sidebar() {
   return (
-    <header className="border-line bg-surface flex shrink-0 flex-col gap-4 border-b p-4 md:sticky md:top-0 md:h-dvh md:w-60 md:gap-6 md:border-r md:border-b-0">
+    <header className="border-line bg-surface flex shrink-0 flex-col gap-4 border-b p-4 md:sticky md:top-0 md:h-dvh md:w-60 md:gap-6 md:border-r md:border-b-0 print:hidden">
       <Link href="/" className="rounded-control self-start text-lg">
         <RobinMark />
       </Link>

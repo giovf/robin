@@ -47,8 +47,9 @@ ownership are in the data model from day one, even though v1 is single-user.
 - `src/lib/calls/` — call sessions: `MeetingBotProvider` (Recall.ai + fake),
   webhook verification, transcript storage, suggestions, transcript indexing;
   `src/app/api/webhooks/recall` receives provider events
-- `src/lib/documents/` — templates, generation, versioning, Markdown→XHTML,
-  Confluence publishing with audit log; `src/lib/diagrams.ts` — Mermaid
+- `src/lib/documents/` — templates, generation, versioning, the customer-wide
+  library (`library.ts`), outlines (`outline.ts`), Markdown→XHTML, Confluence
+  publishing with audit log; `src/lib/diagrams.ts` — Mermaid
   diagrams; `src/lib/phases.ts` — phases, their documents and suggestion focus
 - `src/lib/customers.ts`, `solutions.ts`, `customer-export.ts` — services the
   pages and server actions call; actions stay thin
@@ -107,7 +108,11 @@ Each sits behind an adapter/interface so it can be faked in tests and swapped.
 - Embeddings — none external: `multilingual-e5-small` runs locally
 - Google OAuth — Gmail, Drive, Calendar (read)
 - Atlassian OAuth — Confluence, Jira (read; writes only after user review and
-  explicit confirmation)
+  explicit confirmation). **Parked add-on: off by default.**
+
+Integrations are optional add-on modules: only those listed in
+`ENABLED_INTEGRATIONS` (default `google`) are shown, connectable or called
+(`isIntegrationEnabled` in `src/lib/integrations/setup.ts`).
 
 ## Compliance & accessibility
 

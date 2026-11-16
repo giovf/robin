@@ -10,7 +10,7 @@ import {
   saveDocument,
 } from "@/lib/documents/documents";
 import { runFormAction, type FormState } from "@/lib/form-action";
-import { IntegrationError } from "@/lib/integrations";
+import { IntegrationError, isIntegrationEnabled } from "@/lib/integrations";
 import { requireUser } from "@/lib/session";
 
 const GONE: FormState = { error: "This document no longer exists." };
@@ -78,6 +78,9 @@ export async function publishDocumentAction(
 ): Promise<FormState> {
   return runFormAction(async () => {
     const user = await requireUser();
+    if (!isIntegrationEnabled("atlassian")) {
+      return { error: "Publishing to Confluence is not switched on." };
+    }
     // The select's value is "<connection id>|<space id>".
     const [connectionId = "", spaceId = ""] = String(
       formData.get("space") ?? "",

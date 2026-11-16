@@ -18,7 +18,7 @@ interface TabsProps {
 export function Tabs({ label, items }: TabsProps) {
   const pathname = usePathname();
   return (
-    <nav aria-label={label} className="border-line border-b">
+    <nav aria-label={label} className="border-line border-b print:hidden">
       <ul className="-mb-px flex flex-wrap gap-x-1">
         {items.map((item, index) => {
           const current =

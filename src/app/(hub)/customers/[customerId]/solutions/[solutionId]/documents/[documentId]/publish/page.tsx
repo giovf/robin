@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { ActionForm } from "@/components/action-form";
 import { Field, TextField } from "@/components/field";
@@ -10,6 +11,7 @@ import { requireDocument } from "@/lib/documents/page-context";
 import {
   getFreshIntegrationTokens,
   IntegrationError,
+  isIntegrationEnabled,
   listIntegrationConnections,
   resolveAdapter,
 } from "@/lib/integrations";
@@ -65,6 +67,7 @@ async function confluenceSpaces(organizationId: string): Promise<{
 export default async function PublishDocumentPage({
   params,
 }: PageProps<"/customers/[customerId]/solutions/[solutionId]/documents/[documentId]/publish">) {
+  if (!isIntegrationEnabled("atlassian")) notFound();
   const { customerId, solutionId, documentId } = await params;
   const { user, detail } = await requireDocument(
     customerId,
